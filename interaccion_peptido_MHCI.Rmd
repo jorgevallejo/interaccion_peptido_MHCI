@@ -50,6 +50,27 @@ library(knitr)
 
 # Algoritmo Red Neuronal Artificial
 
+Los algoritmos de Red Neuronal Artificial (o _ANN_ por el inglés _'Artificial Neuronal Net'_), son simulaciones que imitan el funcionamiento de las redes neuronales biológicas. Por lo general no modelan redes neuronales concretas, sino modelos abstractos.
+
+Como abstracción de una red neural biológica, se podría decir que las ANNs constan de dos tipos de "piezas": **neuronas** y **nodos**.
+
+- Las **neuronas** de las ANNs son objetos de código que - igual que hacen las neuronas biológicas - aceptan datos, los procesan, y envían datos a su vez.
+
+- Los **nodos** son el equivalente a los axones y dendritas. Definen qué neuronas están conectadas entre ellas y, por tanto, cómo viaja la información dentro de la red neuronal.
+
+Cada ANN se puede describir por las siguientes características:  
+- La **función de activación**.  
+- La **topología**.  
+- El **algoritmo de entrenamiento**.
+
+La **función de activación** describe la forma en que las neuronas combinan los datos que les llegan para generar los datos que envían. Diferentes funciones de activación son más adecuadas para diferentes tareas de aprendizaje. Las funciones más comunes son la _función de paso único_, la _lineal_, la _lineal saturada_, la _tangente hiperbólica_ y la _gaussiana_.
+
+La **topología** de la red describe el número de neuronas por capa, el número de capas, y cómo se conectan unas con otras.
+
+El **algoritmo de entrenamiento** configura la forma en que ponderan los datos que se transmiten por cada nodo, una forma de modular las señales que viajan por la red _adicional a la función de activación_.
+
+
+
 # Algoritmo Support Vector Machine
 
 Los algoritmos SVM (_Support Vector Machine_) procesan datos distribuidos en un espacio multidimensional, y los utilizan para definir una superficie (hiperplano) que divide dicho espacio en regiones homogéneas que agrupan observaciones afines. Estos algoritmos se usan en el campo del aprendizaje automático tanto para clasificar observaciones, como para hacer predicciones. Este pequeño script pondrá en aplicación una de sus funciones más sencillas, la clasificación de un conjunto de observaciones en dos grupos diferenciados.
