@@ -4,7 +4,8 @@ subtitle: "Machine Learning - PEC 2"
 author: "Jorge Vallejo Ortega"
 date: '`r format(Sys.Date(),"%e de %B, %Y")`'
 output:
-  pdf_document
+  pdf_document:
+    number_sections: true
 header-includes:
   - \renewcommand{\contentsname}{Sumario}
 toc: true
@@ -50,3 +51,23 @@ library(knitr)
 # Algoritmo Red Neuronal Artificial
 
 # Algoritmo Support Vector Machine
+
+Los algoritmos SVM (_Support Vector Machine_) procesan datos distribuidos en un espacio multidimensional, y los utilizan para definir una superficie (hiperplano) que divide dicho espacio en regiones homogéneas que agrupan observaciones afines. Estos algoritmos se usan en el campo del aprendizaje automático tanto para clasificar observaciones, como para hacer predicciones. Este pequeño script pondrá en aplicación una de sus funciones más sencillas, la clasificación de un conjunto de observaciones en dos grupos diferenciados.
+
+Cuando las observaciones de ambos grupos están claramente separadas y pueden separarse completamente mediante una línea, plano, o su equivalente multidimensional (hiperplano), hablamos de **datos separables linealmente**. Sin embargo, en la vida real es muy común que la relación entre variables no sea lineal. Es estos casos, se pueden seguir dos estrategias: aplicación de la _slack variable_ (variable fluctuante) y el uso del _kernel trick_ (cambio de la función kernel).
+
+El caso de la variable _slack_ consiste en añadir una variable el algoritmo que "permite" dejar observaciones de entrenamiento fuera del grupo al que propiamente pertenecen. Aquí lo que produce el algoritmo es una optimización del hiperplano para miniminar la distancia de esas observaciones hasta el límite que define su clasificación correcta.
+
+El _kernel trick_ es matemáticamente más complejo y consiste en añadir nuevas dimensiones a los datos y usarlas para identificar las relaciones no lineales entre las variables. Aquí las superficies que definen los límites entre grupos ya no son hiperplanos, sino curvas de mayor o menor complejidad.
+
+## Fortalezas y debilidades del algoritmo SVM
+
+|Fortalezas|Debilidades|
+|----------------------------------------|----------------------------------------|
+| - Se puede usar tanto para problemas de clasificación como para predicción numérica. | - Encontrar el modelo más adecuado requiere probar varias combinaciones de kernels y parámetros. |
+|||
+| - Poco sensible al ruido en los datos y poco propenso al sobreajuste (overfitting). | - El entrenamiento puede ser lento, en especial se el set de datos tiene un gran número de características o ejemplos. |
+|||
+| - Puede ser de más fácil uso que las redes neurales, especialmente debido a la existencia de varios algoritmos SVM que han sido adaptados para su uso en ciencia de datos. | - El modelo resultante del entrenamiento es de tipo caja negra, complejo y difícil (si no imposible) de interpretar. |
+|||
+| - Popular debido a su alta precisión y a la fama debida a su uso ganador en competiciones de minería de datos. | |
