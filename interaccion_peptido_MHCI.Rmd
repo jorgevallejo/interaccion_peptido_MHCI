@@ -4,9 +4,10 @@ subtitle: "Machine Learning - PEC 2"
 author: "Jorge Vallejo Ortega"
 date: '`r format(Sys.Date(),"%e de %B, %Y")`'
 output:
-  pdf_document:
-      toc: true
-      #pandoc_args: -V toc-title="Sumario"
+  pdf_document
+header-includes:
+  - \renewcommand{\contentsname}{Sumario}
+toc: true
 # Next code for knitting more than one type of document automatically comes from https://stackoverflow.com/questions/39662365/knit-one-markdown-file-to-two-output-files/53280491#53280491
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding,
@@ -46,3 +47,6 @@ library(knitr)
 ```
 \newpage
 
+# Algoritmo Red Neuronal Artificial
+
+# Algoritmo Support Vector Machine
