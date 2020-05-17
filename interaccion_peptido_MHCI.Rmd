@@ -65,11 +65,19 @@ Cada ANN se puede describir por las siguientes características:
 
 La **función de activación** describe la forma en que las neuronas combinan los datos que les llegan para generar los datos que envían. Diferentes funciones de activación son más adecuadas para diferentes tareas de aprendizaje. Las funciones más comunes son la _función de paso único_, la _lineal_, la _lineal saturada_, la _tangente hiperbólica_ y la _gaussiana_.
 
-La **topología** de la red describe el número de neuronas por capa, el número de capas, y cómo se conectan unas con otras.
+La **topología** de la red describe el número de neuronas por capa, el número de capas, y cómo se conectan unas con otras (número de nodos y si la información puede viajar "hacia atrás", de capas posteriores a capas anteriores).
 
-El **algoritmo de entrenamiento** configura la forma en que ponderan los datos que se transmiten por cada nodo, una forma de modular las señales que viajan por la red _adicional a la función de activación_.
+El **algoritmo de entrenamiento** configura la forma en que se ponderan los datos que se transmiten por cada nodo, una forma de modular las señales que viajan por la red _adicional a la función de activación_.
 
+## Fortalezas y debilidades de las Redes Neuronales Artificiales
 
+|Fortalezas|Debilidades|
+|----------------------------------------|----------------------------------------|
+| - Se pueden usar tanto para problemas de clasificación como para predicción numérica. | - Necesitan enormes cantidades de recursos de cálculo y su entrenamiento es lento, especialmente cuando la topología de la red es compleja|
+|||
+| - Pueden modelar patrones más complejos que casi cualquier otro algoritmo. | - Muy susceptibles a sobreajustar los datos de entrenamiento. |
+|||
+| - Hace pocas asunciones previas acerca de las relaciones entre los datos. | - El modelo resultante del entrenamiento es de tipo caja negra, complejo y difícil (si no imposible) de interpretar. |
 
 # Algoritmo Support Vector Machine
 
