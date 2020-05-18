@@ -202,7 +202,7 @@ library(ggplot2)
 library(ggseqlogo)
 ```
 
-```{r generate seqlogos, fig.height=8, fig.width=8, fig.cap='Logo de secuencia de péptidos sin interacción con MHCI (superior) y con interacción (inferior)'.}
+```{r generate seqlogos, fig.height=4, fig.width=4, fig.cap='Logo de secuencia de péptidos sin interacción con MHCI (superior) y con interacción (inferior).'}
 # Draw the sequence logos
 p1 <- ggseqlogo(NB_sequences$sequence, method = 'bit')
 p2 <- ggseqlogo(SB_sequences$sequence, method = 'bit')
@@ -210,3 +210,5 @@ gridExtra::grid.arrange(p1, p2)
 ```
 
 Al comparar los logos de secuencia de los péptidos que no muestran interacción con el MHCI (superior), y los que sí interactúan (inferior); llama la atención la prevalencia de aminoácidos hidrofóbicos en las posiciones 2 y 9 de los péptidos con interacción.
+
+# Referencias
