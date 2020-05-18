@@ -46,6 +46,18 @@ file.remove(c(""))
 # Load packages
 library(knitr)
 ```
+
+```{r create directory structure}
+directories <- c("data", "results", "intermediateData")
+
+# Create directories
+for (i in directories){
+  if (!(dir.exists(i))){
+dir.create(i)
+}
+}
+```
+
 \newpage
 
 # Algoritmo Red Neuronal Artificial
@@ -100,3 +112,6 @@ El _kernel trick_ es matemáticamente más complejo y consiste en añadir nuevas
 | - Puede ser de más fácil uso que las redes neurales, especialmente debido a la existencia de varios algoritmos SVM que han sido adaptados para su uso en ciencia de datos. | - El modelo resultante del entrenamiento es de tipo caja negra, complejo y difícil (si no imposible) de interpretar. |
 |||
 | - Popular debido a su alta precisión y a la fama debida a su uso ganador en competiciones de minería de datos. | |
+
+# Análisis exploratorio
+
