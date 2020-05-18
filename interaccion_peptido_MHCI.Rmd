@@ -46,6 +46,8 @@ file.remove(c(""))
 ```{r libraries, include=FALSE}
 # Load packages
 library(knitr)
+library(ggplot2)
+library(ggseqlogo)
 ```
 
 ```{r create directory structure}
@@ -189,18 +191,16 @@ kable(secuencias_longitud,
       align = 'cc',
       format.args = list(big.mark = " "))
 ```
-
-Una vez aclarada la estructura de las secuencias pasamos a generar los logos de secuencia; en este caso usando el paquete `ggseqlogo`[@10.1093/bioinformatics/btx469].
-
 ```{r generate data sets for seqlogos}
 # Segregate sequences by label
 NB_sequences <- raw_dataframe[raw_dataframe$label == 'NB', ]
 SB_sequences <- raw_dataframe[raw_dataframe$label == 'SB', ]
-
-# Load the packages
-library(ggplot2)
-library(ggseqlogo)
 ```
+
+- Sequencias sin interacción con el MHCI: **`r format(nrow(NB_sequences), big.mark=" ")`**  
+- Sequencias que interaccionan con el MHCI: **`r format(nrow(SB_sequences), big.mark=" ")`** 
+
+Una vez aclarada la estructura de las secuencias pasamos a generar los logos de secuencia; en este caso usando el paquete `ggseqlogo`[@10.1093/bioinformatics/btx469].
 
 ```{r generate seqlogos, fig.height=4, fig.width=4, fig.cap='Logo de secuencia de péptidos sin interacción con MHCI (superior) y con interacción (inferior).'}
 # Draw the sequence logos
