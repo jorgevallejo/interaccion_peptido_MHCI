@@ -3,5 +3,7 @@
 .RData
 .Ruserdata
 
-[directories]
+##directories##
 results/
+data/
+intermediateData/
