@@ -17,6 +17,7 @@ knit: (function(inputFile, encoding) {
 # And:
 # https://stackoverflow.com/a/46007686/10647267
 
+bibliography: scholar.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -45,7 +46,21 @@ file.remove(c(""))
 ```{r libraries, include=FALSE}
 # Load packages
 library(knitr)
+library(ggplot2)
+library(ggseqlogo)
 ```
+
+```{r create directory structure}
+directories <- c("data", "results", "intermediateData")
+
+# Create directories
+for (i in directories){
+  if (!(dir.exists(i))){
+dir.create(i)
+}
+}
+```
+
 \newpage
 
 # Algoritmo Red Neuronal Artificial
@@ -100,3 +115,100 @@ El _kernel trick_ es matemáticamente más complejo y consiste en añadir nuevas
 | - Puede ser de más fácil uso que las redes neurales, especialmente debido a la existencia de varios algoritmos SVM que han sido adaptados para su uso en ciencia de datos. | - El modelo resultante del entrenamiento es de tipo caja negra, complejo y difícil (si no imposible) de interpretar. |
 |||
 | - Popular debido a su alta precisión y a la fama debida a su uso ganador en competiciones de minería de datos. | |
+
+# Análisis exploratorio
+
+```{r check the existence of data file}
+# The file with the dataset must be in a directory called "data"
+# placed in the same directory of the code we are going to run
+
+if (! dir.exists("./data")) {
+  stop("El directorio ./data no existe.
+       El dataset debe estar en el directorio ./data para generar el reporte.")
+}
+
+# Check how many files (if any) are in data directory with format csv
+csv_files <- list.files(path = "./data", pattern = "csv")
+
+if (length(csv_files) < 1){
+  stop("No se ha encontrado en el directorio './data'
+       ningún archivo con extensión csv.
+       Para el uso de este informe automático es necesario
+       que el dataset esté en forma de fichero csv (y con extensión '.csv')
+       en el directorio '.data/'")
+}else if (length(csv_files) > 1){
+  stop("Demasiados archivos con extensión '.csv' en el directorio './data'.
+       Para el uso de este informe automático es necesario 
+       que el dataset esté en forma de un único fichero csv 
+       (y con extensión '.csv') en el directorio '.data/'")
+}
+
+```
+
+El set de datos para este informe proviene del fichero "`r csv_files`".
+
+```{r structure of the data}
+# Read dataset into a data frame and check its structure
+raw_dataframe <- read.csv2(
+  file.path("data", csv_files),
+  stringsAsFactors = FALSE)
+
+raw_dataframe$label <- as.factor(raw_dataframe$label)
+
+observaciones <- nrow(raw_dataframe)
+variables <- ncol(raw_dataframe)
+
+```
+
+El dataset está compuesto por:  
+**`r observaciones` observaciones**, de cada una de las cuales se han obtenido  
+**`r variables` variables**.
+
+```{r variables}
+str(raw_dataframe)
+```
+
+La primera variable, 'sequence', corresponde a la secuencia de aminoácidos en cada péptido en la que cada aminoácido está codificado por una letra siguiendo las [recomendaciones de la IUPAC](https://www.ncbi.nlm.nih.gov/Class/MLACourse/Modules/MolBioReview/iupac_aa_abbreviations.html)[@iupac1984iupac].
+
+La segunda variable, 'label', nos informa de la interacción del péptido con el MHCI; donde 'NB' significa que no hay interacción, y 'SB' significa que sí hay interacción.
+
+Un dato que nos interesaría conocer es el patrón que sigue la secuencia de péptidos en cada categoría ('NB' y 'SB'), representarlo como [secuencia logo](https://es.wikipedia.org/wiki/Logo_de_secuencias), y ver si hay alguna diferencia apreciable a simple vista.
+
+```{r modificando las cadenas de la secuencia}
+# Compruebo si hay secuencias duplicadas
+secuencias_unicas <- length(unique(raw_dataframe$sequence))
+# Compruebo si todas las secuencias tienen la misma longitud
+secuencias_longitud <- table(nchar(raw_dataframe$sequence))
+```
+Antes de nada, comprobamos si tenemos secuencias repetidas en nuestros datos:  
+- Número de observaciones: **`r format(observaciones, big.mark = " ")`**.  
+- Número de secuencias únicas: **`r format(secuencias_unicas, big.mark = " ")`**.
+
+Y la longitud de secuencia de todos los péptidos:
+```{r tabla de longitudes de peptidos}
+kable(secuencias_longitud,
+      col.names = c("Longitud", "Péptidos"),
+      align = 'cc',
+      format.args = list(big.mark = " "))
+```
+```{r generate data sets for seqlogos}
+# Segregate sequences by label
+NB_sequences <- raw_dataframe[raw_dataframe$label == 'NB', ]
+SB_sequences <- raw_dataframe[raw_dataframe$label == 'SB', ]
+```
+
+- Sequencias sin interacción con el MHCI: **`r format(nrow(NB_sequences), big.mark=" ")`**  
+- Sequencias que interaccionan con el MHCI: **`r format(nrow(SB_sequences), big.mark=" ")`** 
+
+Una vez aclarada la estructura de las secuencias pasamos a generar los logos de secuencia; en este caso usando el paquete `ggseqlogo`[@10.1093/bioinformatics/btx469].
+
+```{r generate seqlogos, fig.height=4, fig.width=4, fig.cap='Logo de secuencia de péptidos sin interacción con MHCI (superior) y con interacción (inferior).'}
+# Draw the sequence logos
+p1 <- ggseqlogo(NB_sequences$sequence, method = 'bit')
+p2 <- ggseqlogo(SB_sequences$sequence, method = 'bit')
+gridExtra::grid.arrange(p1, p2)
+```
+
+Al comparar los logos de secuencia de los péptidos que no muestran interacción con el MHCI (superior), y los que sí interactúan (inferior); llama la atención la prevalencia de aminoácidos hidrofóbicos en las posiciones 2 y 9 de los péptidos con interacción.
+
+# Referencias
