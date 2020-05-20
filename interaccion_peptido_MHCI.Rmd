@@ -215,7 +215,7 @@ Al comparar los logos de secuencia de los péptidos que no muestran interacción
 
 ## One-shot encoding
 
-Como paso previo al análisis mediante aprendizaje automático, los péptidos han sido recodificados mediante la transformación conocida como *one hot encoding*, según la cual cada aminoácido en la secuencia del péptido es representado en código binario.
+Como paso previo al análisis mediante aprendizaje automático, los péptidos han sido recodificados mediante la transformación conocida como [*one hot encoding*](https://hackernoon.com/what-is-one-hot-encoding-why-and-when-do-you-have-to-use-it-e3c6186d008f), según la cual cada aminoácido en la secuencia del péptido es representado en código binario.
 
 ```{r one-hot enconding}
 oneHotEncoding <- function(x) {
