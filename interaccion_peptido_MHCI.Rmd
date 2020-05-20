@@ -211,4 +211,50 @@ gridExtra::grid.arrange(p1, p2)
 
 Al comparar los logos de secuencia de los péptidos que no muestran interacción con el MHCI (superior), y los que sí interactúan (inferior); llama la atención la prevalencia de aminoácidos hidrofóbicos en las posiciones 2 y 9 de los péptidos con interacción.
 
+# Pre-procesado de datos
+
+## One-shot encoding
+
+Como paso previo al análisis mediante aprendizaje automático, los péptidos han sido recodificados mediante la transformación conocida como *one hot encoding*, según la cual cada aminoácido en la secuencia del péptido es representado en código binario.
+
+```{r one-hot enconding}
+oneHotEncoding <- function(x) {
+  aminoacidos <- c("A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K",
+                   "M", "F", "P", "S", "T", "W", "Y", "V")
+  # Coding function
+  coder <- function(x){
+    # Make dataframe of zeroes
+    coded <- data.frame(matrix(0, ncol = 20, nrow = 9))
+    # One column for each of proteingenic aminoacids
+    colnames(coded) <- aminoacidos
+    # Row with the peptide sequence
+    coded$peptido <- unlist(strsplit(x[1], ""))
+    
+    # Replace zeros with ones when there is aminoacid coincidence
+    for (row in 1:(length(coded)-1)){
+      coded[, row] <- replace(coded[ ,row], coded$peptido == colnames(coded[row]), 1)
+      }
+    # Take out peptido row
+    coded$peptido <- NULL
+    # Transform the data frame into a vector
+    return(coded <- as.vector(t(coded)))
+  }
+  temporal_encoded <- apply(x, 1, coder)
+  return(as.data.frame(t(temporal_encoded)))
+}
+```
+
+```{r encode all aminoacid sequences}
+# Check firstly if an already encoded object exists,
+# since it takes a lot of time to encode
+if(file.exists("intermediateData/encoded_sequences.RData")){
+  load("intermediateData/encoded_sequences.RData")
+}else{
+  encoded_sequences <- oneHotEncoding(raw_dataframe)
+  save(encoded_sequences, file="intermediateData/encoded_sequences.RData")
+}
+```
+
+Hecho esto, nos encontramos con **`r format(nrow(encoded_sequences), big.mark=" ")`** secuencias y **`r format(ncol(encoded_sequences), big.mark=" ")`** variables cada secuencia.
+
 # Referencias
