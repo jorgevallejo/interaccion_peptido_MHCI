@@ -67,22 +67,22 @@ dir.create(i)
 
 Los algoritmos de Red Neuronal Artificial (o _ANN_ por el inglés _'Artificial Neuronal Net'_), son simulaciones que imitan el funcionamiento de las redes neuronales biológicas. Por lo general no modelan redes neuronales concretas, sino modelos abstractos.
 
-Como abstracción de una red neural biológica, se podría decir que las ANNs constan de dos tipos de "piezas": **neuronas** y **nodos**.
+Como abstracción de una red neural biológica, se podría decir que las ANNs constan de dos tipos de "piezas": **nodos** y **vértices**.
 
-- Las **neuronas** de las ANNs son objetos de código que - igual que hacen las neuronas biológicas - aceptan datos, los procesan, y envían datos a su vez.
+- Los **nodos** de las ANNs son objetos de código que - igual que hacen las neuronas biológicas - aceptan datos, los procesan, y envían datos a su vez.
 
-- Los **nodos** son el equivalente a los axones y dendritas. Definen qué neuronas están conectadas entre ellas y, por tanto, cómo viaja la información dentro de la red neuronal.
+- Los **vértices** son el equivalente a los axones y dendritas. Definen qué neuronas están conectadas entre ellas y, por tanto, cómo viaja la información dentro de la red neuronal.
 
 Cada ANN se puede describir por las siguientes características:  
 - La **función de activación**.  
 - La **topología**.  
 - El **algoritmo de entrenamiento**.
 
-La **función de activación** describe la forma en que las neuronas combinan los datos que les llegan para generar los datos que envían. Diferentes funciones de activación son más adecuadas para diferentes tareas de aprendizaje. Las funciones más comunes son la _función de paso único_, la _lineal_, la _lineal saturada_, la _tangente hiperbólica_ y la _gaussiana_.
+La **función de activación** describe la forma en que los nodos combinan los datos que les llegan para generar los datos que envían. Diferentes funciones de activación son más adecuadas para diferentes tareas de aprendizaje. Las funciones más comunes son la _función de paso único_, la _lineal_, la _lineal saturada_, la _tangente hiperbólica_ y la _gaussiana_.
 
-La **topología** de la red describe el número de neuronas por capa, el número de capas, y cómo se conectan unas con otras (número de nodos y si la información puede viajar "hacia atrás", de capas posteriores a capas anteriores).
+La **topología** de la red describe el número de nodos por capa, el número de capas, y cómo se conectan unas con otras (número de nodos y si la información puede viajar "hacia atrás", de capas posteriores a capas anteriores).
 
-El **algoritmo de entrenamiento** configura la forma en que se ponderan los datos que se transmiten por cada nodo, una forma de modular las señales que viajan por la red _adicional a la función de activación_.
+El **algoritmo de entrenamiento** configura la forma en que se ponderan los datos que se transmiten por cada vértice, una forma de modular las señales que viajan por la red _adicional a la función de activación_.
 
 ## Fortalezas y debilidades de las Redes Neuronales Artificiales
 
@@ -282,5 +282,22 @@ Como último paso antes del análisis, hemos dividido el set de datos - al azar 
 
 **Entrenamiento:** `r format(train, big.mark= " ")` observaciones.  
 **Evaluación:** `r format(test, big.mark=" ")` observaciones.
+
+# Análisis de los datos con Red Neuronal Artificial
+```{r configura semilla aleatorizacion}
+set.seed(1234567)
+```
+
+```{r train the one node model}
+library(neuralnet)
+if(file.exists("intermediateData/model.RData")){
+  load("intermediateData/model.RData")
+}else{
+model <- neuralnet(label ~ ., 
+                   data =  training_dataframe)
+save(model, file = "./intermediateData/model.RData")
+}
+```
+
 
 # Referencias
