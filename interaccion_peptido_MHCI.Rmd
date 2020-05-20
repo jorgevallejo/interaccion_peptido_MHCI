@@ -259,7 +259,28 @@ if(file.exists("intermediateData/encoded_sequences.RData")){
 encoded_sequences$label <- raw_dataframe$label
 ```
 
-
 Hecho esto, vemos que los datos con los que alimentaremos los algoritmos de aprendizaje automático se componen de **`r format(nrow(encoded_sequences), big.mark=" ")`** secuencias y **`r format(ncol(encoded_sequences), big.mark=" ")`** variables cada secuencia.
+
+## Sets de entrenamiento y prueba
+
+```{r separa sets entrenamiento y prueba}
+# Observations by subset
+train <- round((2*observaciones)/3)
+test <- observaciones-train
+
+set.seed(12345)
+# Reordered row numbers
+shuffled_rows <- sample(observaciones)
+training_rows <- shuffled_rows[1:train]
+test_rows <- shuffled_rows[(train + 1):observaciones]
+# Subset the dataframe
+training_dataframe <- encoded_sequences[training_rows, ]
+test_dataframe <- encoded_sequences[test_rows, ]
+```
+
+Como último paso antes del análisis, hemos dividido el set de datos - al azar - en un subset de entrenamiento (2/3 de las observaciones), y un subset de evaluación (1/3 de las observaciones).
+
+**Entrenamiento:** `r format(train, big.mark= " ")` observaciones.  
+**Evaluación:** `r format(test, big.mark=" ")` observaciones.
 
 # Referencias
