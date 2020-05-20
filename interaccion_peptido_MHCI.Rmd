@@ -255,6 +255,11 @@ if(file.exists("intermediateData/encoded_sequences.RData")){
 }
 ```
 
-Hecho esto, nos encontramos con **`r format(nrow(encoded_sequences), big.mark=" ")`** secuencias y **`r format(ncol(encoded_sequences), big.mark=" ")`** variables cada secuencia.
+```{r add labels}
+encoded_sequences$label <- raw_dataframe$label
+```
+
+
+Hecho esto, vemos que los datos con los que alimentaremos los algoritmos de aprendizaje automático se componen de **`r format(nrow(encoded_sequences), big.mark=" ")`** secuencias y **`r format(ncol(encoded_sequences), big.mark=" ")`** variables cada secuencia.
 
 # Referencias
