@@ -317,7 +317,7 @@ Para evaluar el modelo utilizamos el set de datos de prueba que habíamos especi
 ```{r evaluate model one performance}
 model_results <- predict(model, test_dataframe)
 model_results <- max.col(model_results)
-model_results <- factor(one_column_model_results, labels = c("NB", "SB"))
+model_results <- factor(model_results, labels = c("NB", "SB"))
 #mean(test_dataframe$label == model_results)
 
 # confusion matrix for linear from caret package
@@ -336,9 +336,34 @@ if(file.exists("intermediateData/model2.RData")){
 model2 <- neuralnet(label ~ ., 
                    data =  training_dataframe,
                    linear.output = FALSE,
-                   hidden = 1)
+                   hidden = 3)
 save(model, file = "./intermediateData/model2.RData")
 }
+```
+
+
+El primer modelo consta de:  
+`r length(model2$model.list$variables)` nodos de input  
+1 capa escondida compuesta por 3 nodos  
+`r length(model2$model.list$response)` nodos output
+
+Error: `r model2$result.matrix[1]`
+Pasos de entrenamiento: `r model2$result.matrix[3]`
+
+## Evaluación del primer modelo
+Para evaluar el modelo utilizamos el set de datos de prueba que habíamos especificado con anterioridad.
+
+```{r evaluate model three performance}
+model_results2 <- predict(model2, test_dataframe)
+model_results2 <- max.col(model_results2)
+model_results2 <- factor(model_results2, labels = c("NB", "SB"))
+#mean(test_dataframe$label == model_results2)
+
+# confusion matrix for linear from caret package
+# Set SB as the positive
+three_node_matrix <- confusionMatrix(model_results2,
+                test_dataframe$label,
+                positive = "SB")
 ```
 
 A la hora de evaluar modelos predictivos hay tres parámetros sencillos de calcular y explicar, y son los que se han usado en este informe:
@@ -361,5 +386,25 @@ $$
 El objetivo del modelo de clasificación que hemos construido es distinguir entre péptidos que interactúan con el MHCI (positivo) y péptidos que no interactúan con el MHCI (negativo).
 
 En la siguiente tabla podemos comparar los tres parámetros de evaluación para ambos modelos (con 1 nodo o con 3 nodos en la capa oculta):
+
+```{r create dataframe with evaluation values, results='asis'}
+# Recupera los parametros de interes
+one_node_evaluation <- one_node_matrix$byClass[c(1, 2, 5)]
+three_node_evaluation <- three_node_matrix$byClass[c(1, 2, 5)]
+# Create data frame
+evaluation_table <- as.data.frame(rbind(one_node_evaluation,
+                          three_node_evaluation))
+# Change column and row names
+colnames(evaluation_table) <- c("Sensibilidad", "Especificidad", "Precisión")
+rownames(evaluation_table) <- c("Un nodo oculto", "Tres nodos ocultos")
+```
+
+```{r print table, results="asis"}
+# Print table
+knitr::kable(evaluation_table, format="markdown",
+             digits = 3,
+             align = 'ccc')
+```
+
 
 # Referencias
