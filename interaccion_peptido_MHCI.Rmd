@@ -287,17 +287,79 @@ Como último paso antes del análisis, hemos dividido el set de datos - al azar 
 ```{r configura semilla aleatorizacion}
 set.seed(1234567)
 ```
-
+## Primer modelo
 ```{r train the one node model}
 library(neuralnet)
 if(file.exists("intermediateData/model.RData")){
   load("intermediateData/model.RData")
 }else{
 model <- neuralnet(label ~ ., 
-                   data =  training_dataframe)
+                   data =  training_dataframe,
+                   hidden = 1,
+                   linear.output = FALSE)
 save(model, file = "./intermediateData/model.RData")
 }
 ```
 
+El primer modelo consta de:  
+`r length(model$model.list$variables)` nodos de input  
+1 capa escondida compuesta por 1 nodo  
+`r length(model$model.list$response)` nodos output
+
+Error: `r model$result.matrix[1]`
+Pasos de entrenamiento: `r model$result.matrix[3]`
+
+
+
+## Evaluación del primer modelo
+Para evaluar el modelo utilizamos el set de datos de prueba que habíamos especificado con anterioridad.
+
+```{r evaluate model one performance}
+model_results <- predict(model, test_dataframe)
+model_results <- max.col(model_results)
+model_results <- factor(one_column_model_results, labels = c("NB", "SB"))
+#mean(test_dataframe$label == model_results)
+
+# confusion matrix for linear from caret package
+library(caret)
+# Set SB as the positive
+one_node_matrix <- confusionMatrix(model_results,
+                test_dataframe$label,
+                positive = "SB")
+```
+
+## Segundo modelo
+```{r train the one node model}
+if(file.exists("intermediateData/model2.RData")){
+  load("intermediateData/model2.RData")
+}else{
+model2 <- neuralnet(label ~ ., 
+                   data =  training_dataframe,
+                   linear.output = FALSE,
+                   hidden = 1)
+save(model, file = "./intermediateData/model2.RData")
+}
+```
+
+A la hora de evaluar modelos predictivos hay tres parámetros sencillos de calcular y explicar, y son los que se han usado en este informe:
+
+- **Sensibilidad**: Es la proporción de observaciones positivas que han sido clasificadas correctamente.
+$$
+\text{sensibilidad} = \frac{\text{positivos auténticos}}{\text{positivos auténticos } + \text{ falsos negativos}}
+$$
+
+- **Especificidad**: Es la proporción de observaciones negativas que han sido clasificadas correctamente.
+$$
+\text{especificidad} = \frac{\text{negativos auténticos}}{\text{negativos auténticos } + \text{ falsos positivos}}
+$$
+- **Precisión**: Es la proporción de ejemplos clasificados como positivos que son _realmente_ positivos.
+
+$$
+\text{precisión} = \frac{\text{positivos auténticos}}{\text{positivos auténticos } + \text{ falsos positivos}}
+$$
+
+El objetivo del modelo de clasificación que hemos construido es distinguir entre péptidos que interactúan con el MHCI (positivo) y péptidos que no interactúan con el MHCI (negativo).
+
+En la siguiente tabla podemos comparar los tres parámetros de evaluación para ambos modelos (con 1 nodo o con 3 nodos en la capa oculta):
 
 # Referencias
