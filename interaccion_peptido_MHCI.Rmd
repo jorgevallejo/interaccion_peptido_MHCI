@@ -22,7 +22,8 @@ bibliography: scholar.bib
 
 ```{r setup, include=FALSE}
 # knitr options
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE)
 
 # This is a try:
 knitr::opts_knit$set(stop_on_error = 2L)
@@ -312,10 +313,8 @@ El primer modelo consta de:
 1 capa escondida compuesta por 1 nodo  
 `r length(model$model.list$response)` nodos output
 
-Error: `r model$result.matrix[1]`
+Error: `r model$result.matrix[1]`  
 Pasos de entrenamiento: `r model$result.matrix[3]`
-
-
 
 ## Evaluación del primer modelo
 Para evaluar el modelo utilizamos el set de datos de prueba que habíamos especificado con anterioridad.
@@ -348,12 +347,12 @@ save(model2, file = "./intermediateData/model2.RData")
 ```
 
 
-El primer modelo consta de:  
+El segundo modelo consta de:  
 `r length(model2$model.list$variables)` nodos de input  
 1 capa escondida compuesta por 3 nodos  
 `r length(model2$model.list$response)` nodos output
 
-Error: `r model2$result.matrix[1]`
+Error: `r model2$result.matrix[1]`  
 Pasos de entrenamiento: `r model2$result.matrix[3]`
 
 ## Evaluación del segundo modelo
