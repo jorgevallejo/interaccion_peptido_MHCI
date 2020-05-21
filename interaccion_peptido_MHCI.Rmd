@@ -62,6 +62,17 @@ dir.create(i)
 }
 ```
 
+```{r delete results files, eval= FALSE}
+# Run this chunk ONLY if you want to re-do
+# all the report FROM ZERO.
+# Remember that the .RData files are there to
+# avoid unnecesarily redoing long data processing.
+
+file.remove(c("intermediateData/model.RData",
+              "intermediateData/model2.RData",
+              "intermediateData/encoded_sequences.RData",
+              "results/interaccion_peptido_MHCI.pdf"))
+```
 \newpage
 
 # Algoritmo Red Neuronal Artificial
