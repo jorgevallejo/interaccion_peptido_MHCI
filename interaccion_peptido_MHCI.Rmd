@@ -329,7 +329,7 @@ one_node_matrix <- confusionMatrix(model_results,
 ```
 
 ## Segundo modelo
-```{r train the one node model}
+```{r train the three node model}
 if(file.exists("intermediateData/model2.RData")){
   load("intermediateData/model2.RData")
 }else{
@@ -337,7 +337,7 @@ model2 <- neuralnet(label ~ .,
                    data =  training_dataframe,
                    linear.output = FALSE,
                    hidden = 3)
-save(model, file = "./intermediateData/model2.RData")
+save(model2, file = "./intermediateData/model2.RData")
 }
 ```
 
@@ -350,7 +350,7 @@ El primer modelo consta de:
 Error: `r model2$result.matrix[1]`
 Pasos de entrenamiento: `r model2$result.matrix[3]`
 
-## Evaluación del primer modelo
+## Evaluación del segundo modelo
 Para evaluar el modelo utilizamos el set de datos de prueba que habíamos especificado con anterioridad.
 
 ```{r evaluate model three performance}
