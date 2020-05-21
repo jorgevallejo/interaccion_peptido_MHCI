@@ -261,6 +261,12 @@ encoded_sequences$label <- raw_dataframe$label
 
 Hecho esto, vemos que los datos con los que alimentaremos los algoritmos de aprendizaje automático se componen de **`r format(nrow(encoded_sequences), big.mark=" ")`** secuencias y **`r format(ncol(encoded_sequences), big.mark=" ")`** variables cada secuencia.
 
+La siguiente secuencia es un ejemplo de péptido (`r raw_dataframe[1,1]`) codificado mediante one-hot encoding:
+```{r print example of coded peptide}
+as.vector(t(encoded_sequences[1, 1:180]))
+```
+
+
 ## Sets de entrenamiento y prueba
 
 ```{r separa sets entrenamiento y prueba}
