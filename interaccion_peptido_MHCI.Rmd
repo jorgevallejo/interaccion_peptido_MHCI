@@ -316,9 +316,6 @@ El primer modelo consta de:
 Error: `r model$result.matrix[1]`  
 Pasos de entrenamiento: `r model$result.matrix[3]`
 
-## Evaluación del primer modelo
-Para evaluar el modelo utilizamos el set de datos de prueba que habíamos especificado con anterioridad.
-
 ```{r evaluate model one performance}
 model_results <- predict(model, test_dataframe)
 model_results <- max.col(model_results)
@@ -355,8 +352,8 @@ El segundo modelo consta de:
 Error: `r model2$result.matrix[1]`  
 Pasos de entrenamiento: `r model2$result.matrix[3]`
 
-## Evaluación del segundo modelo
-Para evaluar el modelo utilizamos el set de datos de prueba que habíamos especificado con anterioridad.
+## Evaluación de los modelos
+Para evaluar los modelos utilizamos el set de datos de prueba que habíamos especificado con anterioridad.
 
 ```{r evaluate model three performance}
 model_results2 <- predict(model2, test_dataframe)
