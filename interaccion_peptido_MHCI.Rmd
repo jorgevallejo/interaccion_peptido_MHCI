@@ -406,5 +406,8 @@ knitr::kable(evaluation_table, format="markdown",
              align = 'ccc')
 ```
 
+Ambas redes obtienen muy buenos resultados, sin embargo la red con un único nodo en la capa oculta es ligeramente mejor. Quizá se deba a que la red con tres nodos en la capa oculta ha producido un modelo sobreajustado a los datos de entrenamiento, y eso haga que su desempeño sea peor con el set de datos de prueba.
+
+En resumen, aunque ambos modelos son iguales en cuanto a _precisión_, el modelo construido con la red de **un nodo oculto** es ligeramente mejor cuando tenemos en cuenta _especificidad_ y _precisión_.
 
 # Referencias
