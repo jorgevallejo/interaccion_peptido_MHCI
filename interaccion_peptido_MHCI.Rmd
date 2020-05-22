@@ -39,6 +39,7 @@ library(knitr)
 library(ggplot2)
 library(ggseqlogo)
 library(neuralnet)
+library(RSNNS)
 ```
 
 ```{r create directory structure}
@@ -413,5 +414,66 @@ knitr::kable(evaluation_table, format="markdown",
 Ambas redes obtienen muy buenos resultados, sin embargo la red con un único nodo en la capa oculta es ligeramente mejor. Quizá se deba a que la red con tres nodos en la capa oculta ha producido un modelo sobreajustado a los datos de entrenamiento, y eso haga que su desempeño sea peor con el set de datos de prueba.
 
 En resumen, aunque ambos modelos son iguales en cuanto a _precisión_, el modelo construido con la red de **un nodo oculto** es ligeramente mejor cuando tenemos en cuenta _especificidad_ y _precisión_.
+
+## Modelo de tres nodos ocultos entrenado con validación cruzada de 5 particiones
+```{r create cross-validation method}
+fitControl <- trainControl(
+  method = 'repeatedcv',
+  number = 5,
+  repeats = 1)
+```
+
+```{r train ANN model}
+set.seed(1234567)
+if(file.exists("intermediateData/model.ann.caret.RData")){
+  load("intermediateData/model.ann.caret.RData")
+}else{
+model.ann.caret <- caret::train(label ~ .,
+             data=training_dataframe,
+             trControl = fitControl,
+             method='mlp',
+             # Fix size of hidden layer to 3
+             tuneGrid = data.frame(size = 3)
+             )
+save(model.ann.caret, file = "./intermediateData/model.ann.caret.RData")
+}
+```
+
+```{r evaluate performance}
+# Prediction for test values
+predicted.ann.caret <- predict(model.ann.caret,
+                               newdata=test_dataframe)
+# confusion matrix for caret ANN
+# Set SB as the positive
+performance.ann.caret <- confusionMatrix(predicted.ann.caret,
+                test_dataframe$label,
+                positive = "SB")
+```
+
+```{r create dataframe with evaluation values for three models, results='asis'}
+# Recupera los parametros de interes
+five_fold_evaluation <- performance.ann.caret$byClass[c(1, 2, 5)]
+# Create data frame
+evaluation_table2 <- as.data.frame(rbind(one_node_evaluation,
+                          three_node_evaluation,
+                          five_fold_evaluation))
+# Change column and row names
+colnames(evaluation_table2) <- c("Sensibilidad", "Especificidad", "Precisión")
+rownames(evaluation_table2) <- c("Un nodo oculto", "Tres nodos ocultos",
+                                 "Validación cruzada")
+```
+
+XXX Repetir la validación cruzada de forma más correcta. Sigue el modelo del libro de Lantz XXX Por otro lado, el enunciado del ejercicio sugiere que sí tengo que usar la funcion caret::train(). Quizá debería dar sólo el dato de accuracy y olvidar especificidad y precisión? XXX
+
+El método de validación cruzada es un método de validación que se usa para evitar entrenar o testear los modelos con datos no representativos. En este caso, los resultados de la validación cruzada sobre el modelo nos dan **el mismo valor de sensibilidad que los dos modelos anteriores, pero peor especificidad y precisión**.
+
+```{r print table with 5 fold crossvalidation, results="asis"}
+# Print table
+knitr::kable(evaluation_table2, format="markdown",
+             digits = 4,
+             align = 'ccc')
+```
+
+Sin embargo, no he usado el métode de validación en su forma correcta, ya que he apartado un subset de datos de entrenamiento para reproducir lo que he hecho con los dos modelos anteriores. El resultado de ello ha sido que los modelos producidos para validación cruzada se han calculado a partir de menos valores de entrenamiento. Quizá esa sea la razón de la menor especificidad y precisión.
 
 # Referencias
