@@ -418,8 +418,9 @@ En resumen, aunque ambos modelos son iguales en cuanto a _precisión_, el modelo
 # ANN con caret
 ```{r create cross-validation method}
 fitControl <- trainControl(
-  method = 'boot',
-  number = 5)
+  method = 'repeatedcv',
+  number = 5,
+  repeats = 1)
 ```
 
 ```{r train ANN model}
@@ -429,11 +430,12 @@ if(file.exists("intermediateData/model.ann.caret.RData")){
 }else{
 model.ann.caret <- caret::train(label ~ .,
              data=training_dataframe,
-             size = 3,
              trControl = fitControl,
-             method='mlp'
+             method='mlp',
+             # Fix size of hidden layer to 3
+             tuneGrid = data.frame(size = 3)
              )
-save(model2, file = "./intermediateData/model.ann.caret.RData")
+save(model.ann.caret, file = "./intermediateData/model.ann.caret.RData")
 }
 ```
 
@@ -446,6 +448,26 @@ predicted.ann.caret <- predict(model.ann.caret,
 performance.ann.caret <- confusionMatrix(predicted.ann.caret,
                 test_dataframe$label,
                 positive = "SB")
+```
+
+```{r create dataframe with evaluation values for three models, results='asis'}
+# Recupera los parametros de interes
+five_fold_evaluation <- performance.ann.caret$byClass[c(1, 2, 5)]
+# Create data frame
+evaluation_table2 <- as.data.frame(rbind(one_node_evaluation,
+                          three_node_evaluation,
+                          five_fold_evaluation))
+# Change column and row names
+colnames(evaluation_table2) <- c("Sensibilidad", "Especificidad", "Precisión")
+rownames(evaluation_table2) <- c("Un nodo oculto", "Tres nodos ocultos",
+                                 "5-fold crossvalidation")
+```
+
+```{r print table, results="asis"}
+# Print table
+knitr::kable(evaluation_table2, format="markdown",
+             digits = 4,
+             align = 'ccc')
 ```
 
 
