@@ -415,7 +415,7 @@ Ambas redes obtienen muy buenos resultados, sin embargo la red con un único nod
 
 En resumen, aunque ambos modelos son iguales en cuanto a _precisión_, el modelo construido con la red de **un nodo oculto** es ligeramente mejor cuando tenemos en cuenta _especificidad_ y _precisión_.
 
-# ANN con caret
+# Modelo de tres nodos ocultos entrenado con validación cruzada de 5 particiones
 ```{r create cross-validation method}
 fitControl <- trainControl(
   method = 'repeatedcv',
@@ -460,7 +460,7 @@ evaluation_table2 <- as.data.frame(rbind(one_node_evaluation,
 # Change column and row names
 colnames(evaluation_table2) <- c("Sensibilidad", "Especificidad", "Precisión")
 rownames(evaluation_table2) <- c("Un nodo oculto", "Tres nodos ocultos",
-                                 "5-fold crossvalidation")
+                                 "Validación cruzada")
 ```
 
 ```{r print table, results="asis"}
@@ -470,5 +470,10 @@ knitr::kable(evaluation_table2, format="markdown",
              align = 'ccc')
 ```
 
+XXX Repetir la validación cruzada de forma más correcta. Sigue el modelo del libro de Lantz XXX
+
+El método de validación cruzada es un método de validación que se usa para evitar entrenar o testear los modelos con datos no representativos. En este caso, los resultados de la validación cruzada sobre el modelo nos dan **el mismo valor de sensibilidad que los dos modelos anteriores, pero peor especificidad y precisión**.
+
+Sin embargo, no he usado el métode de validación en su forma correcta, ya que he apartado un subset de datos de entrenamiento para reproducir lo que he hecho con los dos modelos anteriores. El resultado de ello ha sido que los modelos producidos para validación cruzada se han calculado a partir de menos valores de entrenamiento. Quizá esa sea la razón de la menor especificidad y precisión.
 
 # Referencias
