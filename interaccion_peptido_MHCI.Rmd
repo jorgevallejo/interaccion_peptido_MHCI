@@ -33,22 +33,12 @@ knitr::opts_knit$set(stop_on_error = 2L)
 # complete script.
 ```
 
-```{r delete results files, eval= FALSE}
-# Run this chunk ONLY if you want to re-do
-# all the report FROM ZERO.
-# Remember that the .RData files are there to
-# avoid unnecesarily redoing long data processing.
-
-file.remove(c(""))
-
-
-```
-
 ```{r libraries, include=FALSE}
 # Load packages
 library(knitr)
 library(ggplot2)
 library(ggseqlogo)
+library(neuralnet)
 ```
 
 ```{r create directory structure}
@@ -286,7 +276,7 @@ as.vector(t(encoded_sequences[1, 1:180]))
 train <- round((2*observaciones)/3)
 test <- observaciones-train
 
-set.seed(12345)
+set.seed(123)
 # Reordered row numbers
 shuffled_rows <- sample(observaciones)
 training_rows <- shuffled_rows[1:train]
@@ -302,12 +292,11 @@ Como último paso antes del análisis, hemos dividido el set de datos - al azar 
 **Evaluación:** `r format(test, big.mark=" ")` observaciones.
 
 # Análisis de los datos con Red Neuronal Artificial
-```{r configura semilla aleatorizacion}
-set.seed(1234567)
-```
+
 ## Primer modelo
 ```{r train the one node model}
-library(neuralnet)
+set.seed(1234567)
+
 if(file.exists("intermediateData/model.RData")){
   load("intermediateData/model.RData")
 }else{
@@ -343,6 +332,8 @@ one_node_matrix <- confusionMatrix(model_results,
 
 ## Segundo modelo
 ```{r train the three node model}
+set.seed(1234567)
+
 if(file.exists("intermediateData/model2.RData")){
   load("intermediateData/model2.RData")
 }else{
