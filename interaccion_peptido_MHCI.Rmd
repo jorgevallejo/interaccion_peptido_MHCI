@@ -437,5 +437,16 @@ save(model2, file = "./intermediateData/model.ann.caret.RData")
 }
 ```
 
+```{r evaluate performance}
+# Prediction for test values
+predicted.ann.caret <- predict(model.ann.caret,
+                               newdata=test_dataframe)
+# confusion matrix for caret ANN
+# Set SB as the positive
+performance.ann.caret <- confusionMatrix(predicted.ann.caret,
+                test_dataframe$label,
+                positive = "SB")
+```
+
 
 # Referencias
