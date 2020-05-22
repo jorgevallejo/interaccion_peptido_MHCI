@@ -39,6 +39,7 @@ library(knitr)
 library(ggplot2)
 library(ggseqlogo)
 library(neuralnet)
+library(RSNNS)
 ```
 
 ```{r create directory structure}
@@ -413,5 +414,28 @@ knitr::kable(evaluation_table, format="markdown",
 Ambas redes obtienen muy buenos resultados, sin embargo la red con un único nodo en la capa oculta es ligeramente mejor. Quizá se deba a que la red con tres nodos en la capa oculta ha producido un modelo sobreajustado a los datos de entrenamiento, y eso haga que su desempeño sea peor con el set de datos de prueba.
 
 En resumen, aunque ambos modelos son iguales en cuanto a _precisión_, el modelo construido con la red de **un nodo oculto** es ligeramente mejor cuando tenemos en cuenta _especificidad_ y _precisión_.
+
+# ANN con caret
+```{r create cross-validation method}
+fitControl <- trainControl(
+  method = 'boot',
+  number = 5)
+```
+
+```{r train ANN model}
+set.seed(1234567)
+if(file.exists("intermediateData/model.ann.caret.RData")){
+  load("intermediateData/model.ann.caret.RData")
+}else{
+model.ann.caret <- caret::train(label ~ .,
+             data=training_dataframe,
+             size = 3,
+             trControl = fitControl,
+             method='mlp'
+             )
+save(model2, file = "./intermediateData/model.ann.caret.RData")
+}
+```
+
 
 # Referencias
