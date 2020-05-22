@@ -406,7 +406,7 @@ rownames(evaluation_table) <- c("Un nodo oculto", "Tres nodos ocultos")
 ```{r print table, results="asis"}
 # Print table
 knitr::kable(evaluation_table, format="markdown",
-             digits = 3,
+             digits = 4,
              align = 'ccc')
 ```
 
