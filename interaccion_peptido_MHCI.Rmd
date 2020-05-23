@@ -476,4 +476,79 @@ knitr::kable(evaluation_table2, format="markdown",
 
 Sin embargo, no he usado el métode de validación en su forma correcta, ya que he apartado un subset de datos de entrenamiento para reproducir lo que he hecho con los dos modelos anteriores. El resultado de ello ha sido que los modelos producidos para validación cruzada se han calculado a partir de menos valores de entrenamiento. Quizá esa sea la razón de la menor especificidad y precisión.
 
+# Análisis de datos con Support Vector Machine
+
+## Entrenamiento y evaluación de modelos
+```{r train a simple linear SVM classifier, results='hide'}
+library(kernlab)
+# vanilladot sets the kernel function to linear kernel
+set.seed(1234567)
+svm_lineal <- ksvm(label ~ ., data = training_dataframe,
+                          kernel = "vanilladot")
+```
+
+```{r Gaussian RBF kernel}
+# RBF kernel uses randomness, set seed if you want to obtain always the same results
+set.seed(1234567)
+if(file.exists("intermediateData/svm_gaussian.RData")){
+  load("intermediateData/svm_gaussian.RData")
+}else{
+  svm_gaussian <- ksvm(label ~ ., data = training_dataframe,
+                          kernel = "rbfdot")
+  save(svm_gaussian, file="intermediateData/svm_gaussian.RData")
+}
+```
+
+Para este informe hemos construido y entrenado dos modelos SVM de diferente complejidad para comparar sus resultados.
+
+Uno es un **SVM lineal**, más sencillo, y el otro es un **SVM gaussiano**; este último es más complejo y requiere más recursos de cálculo, pero permite que el modelo aprenda relaciones más complejas entre las variables del set de datos.
+
+Los sets de entrenamiento y evaluación usados para ambos modelos son idénticos, para poder hacer la comparación, e iguales también a los usados en los modelos de Red Neuronal Artificial.
+
+```{r make predictions on testing dataset, results='hide'}
+svm_linear_predictions <- predict(svm_lineal, test_dataframe)
+
+svm_gaussian_predictions <- predict(svm_gaussian, test_dataframe)
+#head(svm_linear_predictions)
+```
+
+```{r confusion matrix for linear from caret package, message=FALSE}
+# We set interaction as the positive
+linear_matrix <- confusionMatrix(svm_linear_predictions,
+                test_dataframe$label,
+                positive = "SB")
+```
+
+```{r confusion matrix for gaussian from caret package}
+# We set interaction as the positive
+gaussian_matrix <- confusionMatrix(svm_gaussian_predictions,
+                test_dataframe$label,
+                positive = "SB")
+```
+
+A la hora de evaluar modelos predictivos usamos los mismos tres parámetros usados anteriormente con los modelos de Red Neuronal Artificial: _sensibilidad_, _especificidad_ y _precisión_. Podemos ver la comparativa en la siguiente tabla:
+
+```{r create dataframe with svm evaluation values, results='asis'}
+# Recupera los parametros de interes
+linear_evaluation <- linear_matrix$byClass[c(1, 2, 5)]
+gaussian_evaluation <- gaussian_matrix$byClass[c(1, 2, 5)]
+# Create data frame
+svm_evaluation_table <- as.data.frame(rbind(linear_evaluation,
+                          gaussian_evaluation))
+# Change column and row names
+colnames(svm_evaluation_table) <- c("Sensibilidad", "Especificidad", "Precisión")
+rownames(svm_evaluation_table) <- c("Modelo lineal", "Modelo Gaussiano")
+```
+
+```{r print svm evaluation table, results="asis"}
+# Print table
+knitr::kable(svm_evaluation_table, format="markdown",
+             digits = 3,
+             align = 'ccc')
+```
+
+Vemos en la comparativa que **el modelo gaussiano es ligeramente más sensible** que el lineal (menos falsos negativos), pero a cambio de **menor especificidad y precisión** (más falsos positivos).
+
+La elección entre uno y otro modelo en este caso podría depender si no queremos pasar por alto ninguno de los péptidos que presentan interacción (elegiríamos el modelo gaussiano, con mayor sensibilidad); o de si no queremos asumir la pérdida de tiempo y dinero que supondría testar falsos positivos (eligiríamos el modelo lineal, con mayor especificidad y precisión).
+
 # Referencias
