@@ -514,14 +514,14 @@ svm_gaussian_predictions <- predict(svm_gaussian, test_dataframe)
 
 ```{r confusion matrix for linear from caret package, message=FALSE}
 # We set interaction as the positive
-linear_matrix <- confusionMatrix(svm_linear_predictions,
+linear_matrix <- caret::confusionMatrix(svm_linear_predictions,
                 test_dataframe$label,
                 positive = "SB")
 ```
 
 ```{r confusion matrix for gaussian from caret package}
 # We set interaction as the positive
-gaussian_matrix <- confusionMatrix(svm_gaussian_predictions,
+gaussian_matrix <- caret::confusionMatrix(svm_gaussian_predictions,
                 test_dataframe$label,
                 positive = "SB")
 ```
@@ -550,5 +550,26 @@ knitr::kable(svm_evaluation_table, format="markdown",
 Vemos en la comparativa que **el modelo gaussiano es ligeramente más sensible** que el lineal (menos falsos negativos), pero a cambio de **menor especificidad y precisión** (más falsos positivos).
 
 La elección entre uno y otro modelo en este caso podría depender si no queremos pasar por alto ninguno de los péptidos que presentan interacción (elegiríamos el modelo gaussiano, con mayor sensibilidad); o de si no queremos asumir la pérdida de tiempo y dinero que supondría testar falsos positivos (eligiríamos el modelo lineal, con mayor especificidad y precisión).
+
+## Modelo gaussiano ocultos entrenado con validación cruzada de 5 particiones
+```{r create cross-validation method, eval=FALSE}
+svm_fitControl <- trainControl(
+  method = 'cv',
+  number = 5)
+```
+
+```{r train svm RBF model, eval = FALSE}
+set.seed(1234567)
+if(file.exists("intermediateData/svm_caret.RData")){
+  load("intermediateData/svm_caret.RData")
+}else{
+svm_caret <- caret::train(label ~ .,
+             data=test_dataframe,
+             trControl = fitControl,
+             method='gaussprRadial'
+             )
+save(model.ann.caret, file = "./intermediateData/svm_caret.RData")
+}
+```
 
 # Referencias
