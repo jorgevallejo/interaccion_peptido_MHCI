@@ -178,7 +178,7 @@ La primera variable, 'sequence', corresponde a la secuencia de aminoácidos en c
 La segunda variable, 'label', nos informa de la interacción del péptido con el MHCI; donde 'NB' significa que no hay interacción, y 'SB' significa que sí hay interacción.
 
 Un dato que nos interesaría conocer es el patrón que sigue la secuencia de péptidos en cada categoría ('NB' y 'SB'), representarlo como [secuencia logo](https://es.wikipedia.org/wiki/Logo_de_secuencias), y ver si hay alguna diferencia apreciable a simple vista.
-
+\newpage
 ```{r modificando las cadenas de la secuencia}
 # Compruebo si hay secuencias duplicadas
 secuencias_unicas <- length(unique(raw_dataframe$sequence))
@@ -551,6 +551,7 @@ knitr::kable(svm_evaluation_table, format="markdown",
 Vemos en la comparativa que **el modelo gaussiano es ligeramente más sensible** que el lineal (menos falsos negativos), pero a cambio de **menor especificidad y precisión** (más falsos positivos).
 
 La elección entre uno y otro modelo en este caso podría depender si no queremos pasar por alto ninguno de los péptidos que presentan interacción (elegiríamos el modelo gaussiano, con mayor sensibilidad); o de si no queremos asumir la pérdida de tiempo y dinero que supondría testar falsos positivos (eligiríamos el modelo lineal, con mayor especificidad y precisión).
+\newpage
 
 ## Modelo gaussiano entrenado por validación cruzada de 5 particiones
 ```{r create cross-validation method for svm}
@@ -625,6 +626,7 @@ knitr::kable(all_evaluation_table, format="markdown",
 Vemos que no hemos conseguido una solución perfecta, y además no hay grandes diferencias en los valores de desempeño. La elección del modelo a elegir depederá de si preferimos **sensibilidad**, para lo cual elegiríamos el **modelo SVM gaussiano**; o si necesitamos que **especificidad y precisión** sean lo más altas posible, por lo que nos decantaríamos por el **modelo SVM gaussiano entrenado por validación cruzada**.
 
 Aunque también debemos tener en cuenta que los datos de desempeño de este último modelo, el **SVM gaussiano entrenado por validación cruzada**, se han obtenido al entrenarlo con una mayor variedad de datos que otros modelos SVM, por lo que es un desempeño más representativo de cómo se comportará el modelo al enfrentarlo a datos nuevos; así que podría ser la mejor elección en cualquier caso.
+\newpage
 
 # Apéndice A: Código
 
