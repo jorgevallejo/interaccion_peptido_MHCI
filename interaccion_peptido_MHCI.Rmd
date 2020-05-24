@@ -326,7 +326,7 @@ model_results <- factor(model_results, labels = c("NB", "SB"))
 # confusion matrix for linear from caret package
 library(caret)
 # Set SB as the positive
-one_node_matrix <- confusionMatrix(model_results,
+one_node_matrix <- caret::confusionMatrix(model_results,
                 test_dataframe$label,
                 positive = "SB")
 ```
@@ -366,7 +366,7 @@ model_results2 <- factor(model_results2, labels = c("NB", "SB"))
 
 # confusion matrix for linear from caret package
 # Set SB as the positive
-three_node_matrix <- confusionMatrix(model_results2,
+three_node_matrix <- caret::confusionMatrix(model_results2,
                 test_dataframe$label,
                 positive = "SB")
 ```
@@ -514,14 +514,14 @@ svm_gaussian_predictions <- predict(svm_gaussian, test_dataframe)
 
 ```{r confusion matrix for linear from caret package, message=FALSE}
 # We set interaction as the positive
-linear_matrix <- confusionMatrix(svm_linear_predictions,
+linear_matrix <- caret::confusionMatrix(svm_linear_predictions,
                 test_dataframe$label,
                 positive = "SB")
 ```
 
 ```{r confusion matrix for gaussian from caret package}
 # We set interaction as the positive
-gaussian_matrix <- confusionMatrix(svm_gaussian_predictions,
+gaussian_matrix <- caret::confusionMatrix(svm_gaussian_predictions,
                 test_dataframe$label,
                 positive = "SB")
 ```
@@ -550,5 +550,63 @@ knitr::kable(svm_evaluation_table, format="markdown",
 Vemos en la comparativa que **el modelo gaussiano es ligeramente más sensible** que el lineal (menos falsos negativos), pero a cambio de **menor especificidad y precisión** (más falsos positivos).
 
 La elección entre uno y otro modelo en este caso podría depender si no queremos pasar por alto ninguno de los péptidos que presentan interacción (elegiríamos el modelo gaussiano, con mayor sensibilidad); o de si no queremos asumir la pérdida de tiempo y dinero que supondría testar falsos positivos (eligiríamos el modelo lineal, con mayor especificidad y precisión).
+
+## Modelo gaussiano ocultos entrenado con validación cruzada de 5 particiones
+```{r create cross-validation method}
+svm_fitControl <- trainControl(
+  method = 'cv',
+  number = 5)
+```
+
+```{r train svm RBF model}
+set.seed(1234567)
+if(file.exists("intermediateData/svm_caret.RData")){
+  load("intermediateData/svm_caret.RData")
+}else{
+svm_caret <- caret::train(label ~ .,
+             data=encoded_sequences,
+             trControl = svm_fitControl,
+             method='svmRadial'
+             )
+save(svm_caret, file = "./intermediateData/svm_caret.RData")
+}
+
+# Best tuning result is with C = 1.00
+# Next time you need to run it, fix it with tuneGrid
+```
+
+```{r evaluate svm_caret performance}
+# Prediction for test values
+predicted_svm_caret <- predict(svm_caret,
+                               newdata=test_dataframe)
+# confusion matrix for caret ANN
+# Set SB as the positive
+performance_svm_caret <- confusionMatrix(predicted_svm_caret,
+                test_dataframe$label,
+                positive = "SB")
+```
+
+```{r create dataframe with evaluation values for three SVM models, results='asis'}
+# Recupera los parametros de interes
+five_fold_svm_evaluation <- performance_svm_caret$byClass[c(1, 2, 5)]
+# Create data frame
+svm_evaluation_table2 <- as.data.frame(rbind(linear_evaluation,
+                          gaussian_evaluation,
+                          five_fold_svm_evaluation))
+# Change column and row names
+colnames(svm_evaluation_table2) <- c("Sensibilidad", "Especificidad", "Precisión")
+rownames(svm_evaluation_table2) <- c("Modelo Lineal", "Modelo Gaussiano",
+                                 "Gaussiano con validación cruzada")
+```
+
+```{r print svm evaluation table 2, results="asis"}
+# Print table
+knitr::kable(svm_evaluation_table2, format="markdown",
+             digits = 3,
+             align = 'ccc')
+```
+
+**El modelo gaussiano con validación cruzada** podría ser la mejor solución comparando los tres modelos construidos mediante SVM, ya que **combina la sensibilidad del modelo gaussiano con casi los mismos niveles de especificidad y precisión del modelo lineal**.
+
 
 # Referencias
