@@ -415,7 +415,7 @@ Ambas redes obtienen muy buenos resultados, sin embargo la red con un único nod
 
 En resumen, aunque ambos modelos son iguales en cuanto a _precisión_, el modelo construido con la red de **un nodo oculto** es ligeramente mejor cuando tenemos en cuenta _especificidad_ y _precisión_.
 
-## Modelo de tres nodos ocultos entrenado con validación cruzada de 5 particiones
+## Modelo de tres nodos ocultos entrenado por validación cruzada de 5 particiones
 ```{r create cross-validation method}
 fitControl <- trainControl(
   method = 'repeatedcv',
@@ -551,8 +551,8 @@ Vemos en la comparativa que **el modelo gaussiano es ligeramente más sensible**
 
 La elección entre uno y otro modelo en este caso podría depender si no queremos pasar por alto ninguno de los péptidos que presentan interacción (elegiríamos el modelo gaussiano, con mayor sensibilidad); o de si no queremos asumir la pérdida de tiempo y dinero que supondría testar falsos positivos (eligiríamos el modelo lineal, con mayor especificidad y precisión).
 
-## Modelo gaussiano ocultos entrenado con validación cruzada de 5 particiones
-```{r create cross-validation method}
+## Modelo gaussiano entrenado por validación cruzada de 5 particiones
+```{r create cross-validation method for svm}
 svm_fitControl <- trainControl(
   method = 'cv',
   number = 5)
@@ -596,7 +596,7 @@ svm_evaluation_table2 <- as.data.frame(rbind(linear_evaluation,
 # Change column and row names
 colnames(svm_evaluation_table2) <- c("Sensibilidad", "Especificidad", "Precisión")
 rownames(svm_evaluation_table2) <- c("Modelo Lineal", "Modelo Gaussiano",
-                                 "Gaussiano con validación cruzada")
+                                 "Gaussiano por validación cruzada")
 ```
 
 ```{r print svm evaluation table 2, results="asis"}
@@ -606,7 +606,23 @@ knitr::kable(svm_evaluation_table2, format="markdown",
              align = 'ccc')
 ```
 
-**El modelo gaussiano con validación cruzada** podría ser la mejor solución comparando los tres modelos construidos mediante SVM, ya que **combina la sensibilidad del modelo gaussiano con casi los mismos niveles de especificidad y precisión del modelo lineal**.
+**El modelo gaussiano por validación cruzada** podría ser la mejor solución (para este tipo de datos) comparando los tres modelos construidos mediante SVM, ya que **combina la sensibilidad del modelo gaussiano con casi los mismos niveles de especificidad y precisión del modelo lineal**.
 
+# Comentario final
+
+Finalmente comparamos el desempeño de todos los modelos, tanto los producidos mediante Redes Neurales Artificiales como los producidos mediante Support Vector Machines, para elegir el que mejor se adapte a nuestras necesidades:
+
+```{r create dataframe with evaluation values for all models, results='asis'}
+# Create data frame
+all_evaluation_table <- rbind(evaluation_table2,
+                              svm_evaluation_table2)
+
+# Print table
+knitr::kable(all_evaluation_table, format="markdown",
+             digits = 4,
+             align = 'ccc')
+```
+
+Vemos que no hemos conseguido una solución perfecta. Como comentábamos en apartados anteriores, la elección del modelo a elegir depederá de si preferimos **sensibilidad**, para lo cual elegiríamos el **modelo gaussiano por validación cruzada**; o si necesitamos que **especificidad y precisión** sean lo más altas posible, por lo que nos decantaríamos por el modelo de **red neural artificial con tres nodos en la capa oculta**.
 
 # Referencias
