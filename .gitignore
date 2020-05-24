@@ -5,5 +5,5 @@
 
 ##directories##
 results/
-data/
+# data/
 intermediateData/
