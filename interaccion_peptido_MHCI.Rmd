@@ -626,4 +626,14 @@ Vemos que no hemos conseguido una solución perfecta, y además no hay grandes d
 
 Aunque también debemos tener en cuenta que los datos de desempeño de este último modelo, el **SVM gaussiano entrenado por validación cruzada**, se han obtenido al entrenarlo con una mayor variedad de datos que otros modelos SVM, por lo que es un desempeño más representativo de cómo se comportará el modelo al enfrentarlo a datos nuevos; así que podría ser la mejor elección en cualquier caso.
 
+# Apéndice A: Código
+
+El documento original en formato .Rmd, que incluye el código completo en lenguaje R usado para generar este informe, se puede consultar y descargar en el siguiente repositorio de Github:
+[jorgevallejo/interaccion_peptido_MHCI](https://github.com/jorgevallejo/interaccion_peptido_MHCI)
+
+# Apéndice B: Reproducibilidad
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+sessionInfo() # For better reproducibility
+```
+
 # Referencias
