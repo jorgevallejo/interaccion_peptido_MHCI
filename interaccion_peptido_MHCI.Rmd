@@ -40,6 +40,8 @@ library(ggplot2)
 library(ggseqlogo)
 library(neuralnet)
 library(RSNNS)
+library(caret)
+library(kernlab)
 ```
 
 ```{r create directory structure}
@@ -205,14 +207,27 @@ SB_sequences <- raw_dataframe[raw_dataframe$label == 'SB', ]
 
 Una vez aclarada la estructura de las secuencias pasamos a generar los logos de secuencia; en este caso usando el paquete `ggseqlogo`[@10.1093/bioinformatics/btx469].
 
-```{r generate seqlogos, fig.height=4, fig.width=4, fig.cap='Logo de secuencia de péptidos sin interacción con MHCI (superior) y con interacción (inferior).'}
-# Draw the sequence logos
-p1 <- ggseqlogo(NB_sequences$sequence, method = 'bit')
-p2 <- ggseqlogo(SB_sequences$sequence, method = 'bit')
-gridExtra::grid.arrange(p1, p2)
+```{r generate seqlogos prob, fig.width=5.5, fig.height=3, fig.cap='Logo de secuencia de péptidos sin interacción con MHCI (superior) y con interacción (inferior). En el eje vertical se representan las proporciones de cada aminoácido en cada posición.'}
+
+# Make a named list with both groups of sequences
+sequence_list <- list(NB_sequences$sequence, SB_sequences$sequence)
+names(sequence_list) <- c("Péptidos sin interacción",
+                          "Péptidos con interacción")
+# Draw the seqlogos
+ggseqlogo(sequence_list, method='prob', ncol=2)
 ```
 
 Al comparar los logos de secuencia de los péptidos que no muestran interacción con el MHCI (superior), y los que sí interactúan (inferior); llama la atención la prevalencia de aminoácidos hidrofóbicos en las posiciones 2 y 9 de los péptidos con interacción.
+\newpage
+La diferencia se ve mucho mejor si en el eje vertical representamos los bits de información aportados en lugar de la probabilidad:
+
+```{r generate seqlogos bit, fig.width=5.5, fig.height=3, fig.cap='Logo de secuencia de péptidos sin interacción con MHCI (superior) y con interacción (inferior). En el eje vertical se representan los bits de información de cada aminoácido en cada posición.'}
+
+# Draw the seqlogos
+ggseqlogo(sequence_list, method='bit', ncol=2)
+```
+
+En el caso de los péptidos sin interacción con MHCI, la información aportada por cada aminoácido es tan baja que apenas aparecen representados cuando se usa la misma escala que para los péptidos que sí interaccionan.
 
 # Pre-procesado de datos
 
@@ -294,7 +309,7 @@ Como último paso antes del análisis, hemos dividido el set de datos - al azar 
 
 # Análisis de los datos con Red Neuronal Artificial
 
-## Primer modelo
+## Primer modelo (una capa oculta con un nodo)
 ```{r train the one node model}
 set.seed(1234567)
 
@@ -311,7 +326,7 @@ save(model, file = "./intermediateData/model.RData")
 
 El primer modelo consta de:  
 `r length(model$model.list$variables)` nodos de input  
-1 capa escondida compuesta por 1 nodo  
+1 capa oculta compuesta por 1 nodo  
 `r length(model$model.list$response)` nodos output
 
 Error: `r model$result.matrix[1]`  
@@ -324,14 +339,13 @@ model_results <- factor(model_results, labels = c("NB", "SB"))
 #mean(test_dataframe$label == model_results)
 
 # confusion matrix for linear from caret package
-library(caret)
 # Set SB as the positive
 one_node_matrix <- caret::confusionMatrix(model_results,
                 test_dataframe$label,
                 positive = "SB")
 ```
 
-## Segundo modelo
+## Segundo modelo (una capa oculta con tres nodos)
 ```{r train the three node model}
 set.seed(1234567)
 
@@ -411,26 +425,27 @@ knitr::kable(evaluation_table, format="markdown",
              align = 'ccc')
 ```
 
-Ambas redes obtienen muy buenos resultados, sin embargo la red con un único nodo en la capa oculta es ligeramente mejor. Quizá se deba a que la red con tres nodos en la capa oculta ha producido un modelo sobreajustado a los datos de entrenamiento, y eso haga que su desempeño sea peor con el set de datos de prueba.
+Ambas redes obtienen muy buenos resultados, sin embargo **la red con un único nodo en la capa oculta es ligeramente mejor en cuanto a sensibilidad**; mientras que el modelo construido con la red de **tres nodos ocultos** es ligeramente mejor en los valores de evaluación de **especificidad** y **precisión**.
 
-En resumen, aunque ambos modelos son iguales en cuanto a _precisión_, el modelo construido con la red de **un nodo oculto** es ligeramente mejor cuando tenemos en cuenta _especificidad_ y _precisión_.
-
-## Modelo de tres nodos ocultos entrenado por validación cruzada de 5 particiones
+## Modelo de una capa oculta con tres nodos entrenado por validación cruzada de 5 particiones
 ```{r create cross-validation method}
 fitControl <- trainControl(
-  method = 'repeatedcv',
-  number = 5,
-  repeats = 1)
+  summaryFunction = multiClassSummary,
+  classProbs = TRUE,
+  method = 'cv',
+  number = 5)
 ```
 
 ```{r train ANN model}
 set.seed(1234567)
+library(MLmetrics)
 if(file.exists("intermediateData/model.ann.caret.RData")){
   load("intermediateData/model.ann.caret.RData")
 }else{
 model.ann.caret <- caret::train(label ~ .,
-             data=training_dataframe,
+             data=encoded_sequences,
              trControl = fitControl,
+             metric= 'Sensitivity',
              method='mlp',
              # Fix size of hidden layer to 3
              tuneGrid = data.frame(size = 3)
@@ -439,20 +454,9 @@ save(model.ann.caret, file = "./intermediateData/model.ann.caret.RData")
 }
 ```
 
-```{r evaluate performance}
-# Prediction for test values
-predicted.ann.caret <- predict(model.ann.caret,
-                               newdata=test_dataframe)
-# confusion matrix for caret ANN
-# Set SB as the positive
-performance.ann.caret <- confusionMatrix(predicted.ann.caret,
-                test_dataframe$label,
-                positive = "SB")
-```
-
 ```{r create dataframe with evaluation values for three models, results='asis'}
 # Recupera los parametros de interes
-five_fold_evaluation <- performance.ann.caret$byClass[c(1, 2, 5)]
+five_fold_evaluation <- model.ann.caret$results[c(8, 9, 5)]
 # Create data frame
 evaluation_table2 <- as.data.frame(rbind(one_node_evaluation,
                           three_node_evaluation,
@@ -463,9 +467,7 @@ rownames(evaluation_table2) <- c("Un nodo oculto", "Tres nodos ocultos",
                                  "Validación cruzada")
 ```
 
-XXX Repetir la validación cruzada de forma más correcta. Sigue el modelo del libro de Lantz XXX Por otro lado, el enunciado del ejercicio sugiere que sí tengo que usar la funcion caret::train(). Quizá debería dar sólo el dato de accuracy y olvidar especificidad y precisión? XXX
-
-El método de validación cruzada es un método de validación que se usa para evitar entrenar o testear los modelos con datos no representativos. En este caso, los resultados de la validación cruzada sobre el modelo nos dan **el mismo valor de sensibilidad que los dos modelos anteriores, pero peor especificidad y precisión**.
+El método de _validación cruzada por particiones_ que se usa para evitar entrenar o testear los modelos con datos no representativos, y ofrece unos resultados de evaluación del modelo más fiables respecto a cómo se comportará al enfrentarse a datos nuevos. 
 
 ```{r print table with 5 fold crossvalidation, results="asis"}
 # Print table
@@ -474,13 +476,12 @@ knitr::kable(evaluation_table2, format="markdown",
              align = 'ccc')
 ```
 
-Sin embargo, no he usado el métode de validación en su forma correcta, ya que he apartado un subset de datos de entrenamiento para reproducir lo que he hecho con los dos modelos anteriores. El resultado de ello ha sido que los modelos producidos para validación cruzada se han calculado a partir de menos valores de entrenamiento. Quizá esa sea la razón de la menor especificidad y precisión.
+Si comparamos los datos de **sensibilidad, especificidad y precisión**, con los calculados anteriorment para el modelo de tres nodos ocultos, **los nuevos valores son inferiores** en los tres casos. Aunque es el mismo modelo; al estar calculados usando diferentes combinaciones del mismo dataset representan mejor las capacidades del modelo.
 
 # Análisis de datos con Support Vector Machine
 
 ## Entrenamiento y evaluación de modelos
 ```{r train a simple linear SVM classifier, results='hide'}
-library(kernlab)
 # vanilladot sets the kernel function to linear kernel
 set.seed(1234567)
 svm_lineal <- ksvm(label ~ ., data = training_dataframe,
@@ -554,6 +555,8 @@ La elección entre uno y otro modelo en este caso podría depender si no queremo
 ## Modelo gaussiano entrenado por validación cruzada de 5 particiones
 ```{r create cross-validation method for svm}
 svm_fitControl <- trainControl(
+  summaryFunction = multiClassSummary,
+  classProbs = TRUE,
   method = 'cv',
   number = 5)
 ```
@@ -565,30 +568,22 @@ if(file.exists("intermediateData/svm_caret.RData")){
 }else{
 svm_caret <- caret::train(label ~ .,
              data=encoded_sequences,
+             metric= 'Sensitivity',
              trControl = svm_fitControl,
-             method='svmRadial'
+             method='svmRadial',
+             # Fix C to 1, because it is so in the previous models
+             # The value of sigma comes from the previous radial model
+             tuneGrid = expand.grid(C = c(1), 
+                                    sigma = c(0.00291971510799512))
              )
 save(svm_caret, file = "./intermediateData/svm_caret.RData")
 }
-
-# Best tuning result is with C = 1.00
-# Next time you need to run it, fix it with tuneGrid
 ```
 
-```{r evaluate svm_caret performance}
-# Prediction for test values
-predicted_svm_caret <- predict(svm_caret,
-                               newdata=test_dataframe)
-# confusion matrix for caret ANN
-# Set SB as the positive
-performance_svm_caret <- confusionMatrix(predicted_svm_caret,
-                test_dataframe$label,
-                positive = "SB")
-```
 
 ```{r create dataframe with evaluation values for three SVM models, results='asis'}
 # Recupera los parametros de interes
-five_fold_svm_evaluation <- performance_svm_caret$byClass[c(1, 2, 5)]
+five_fold_svm_evaluation <- svm_caret$results[c(9, 10, 6)]
 # Create data frame
 svm_evaluation_table2 <- as.data.frame(rbind(linear_evaluation,
                           gaussian_evaluation,
@@ -606,7 +601,11 @@ knitr::kable(svm_evaluation_table2, format="markdown",
              align = 'ccc')
 ```
 
-**El modelo gaussiano por validación cruzada** podría ser la mejor solución (para este tipo de datos) comparando los tres modelos construidos mediante SVM, ya que **combina la sensibilidad del modelo gaussiano con casi los mismos niveles de especificidad y precisión del modelo lineal**.
+**El modelo gaussiano por validación cruzada** es ligeramente menos sensible que el que no está entrenado por validación cruzada, pero su especificidad y precisión son mayores.Y en todos los valores presenta mejor desempeño que el modelo lineal.
+
+Además los datos de desempeño en modelos entrenados por validación cruzada son más robustos en cuanto a cómo se comportará el modelo frente a datos desconocidos. Por todas estas razónes, **el modelo más adecuado de SVM sería el gaussiano entrenado por validación cruzada**.
+
+
 
 # Comentario final
 
@@ -623,6 +622,8 @@ knitr::kable(all_evaluation_table, format="markdown",
              align = 'ccc')
 ```
 
-Vemos que no hemos conseguido una solución perfecta. Como comentábamos en apartados anteriores, la elección del modelo a elegir depederá de si preferimos **sensibilidad**, para lo cual elegiríamos el **modelo gaussiano por validación cruzada**; o si necesitamos que **especificidad y precisión** sean lo más altas posible, por lo que nos decantaríamos por el modelo de **red neural artificial con tres nodos en la capa oculta**.
+Vemos que no hemos conseguido una solución perfecta, y además no hay grandes diferencias en los valores de desempeño. La elección del modelo a elegir depederá de si preferimos **sensibilidad**, para lo cual elegiríamos el **modelo SVM gaussiano**; o si necesitamos que **especificidad y precisión** sean lo más altas posible, por lo que nos decantaríamos por el **modelo SVM gaussiano entrenado por validación cruzada**.
+
+Aunque también debemos tener en cuenta que los datos de desempeño de este último modelo, el **SVM gaussiano entrenado por validación cruzada**, se han obtenido al entrenarlo con una mayor variedad de datos que otros modelos SVM, por lo que es un desempeño más representativo de cómo se comportará el modelo al enfrentarlo a datos nuevos; así que podría ser la mejor elección en cualquier caso.
 
 # Referencias
