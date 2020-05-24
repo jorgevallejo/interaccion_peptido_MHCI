@@ -606,4 +606,7 @@ knitr::kable(svm_evaluation_table2, format="markdown",
              align = 'ccc')
 ```
 
+**El modelo gaussiano con validación cruzada** podría ser la mejor solución comparando los tres modelos construidos mediante SVM, ya que **combina la sensibilidad del modelo gaussiano con casi los mismos niveles de especificidad y precisión del modelo lineal**.
+
+
 # Referencias
