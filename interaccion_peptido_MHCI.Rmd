@@ -5,8 +5,10 @@ author: "Jorge Vallejo Ortega"
 date: '`r format(Sys.Date(),"%e de %B, %Y")`'
 output:
   pdf_document:
-      toc: true
-      #pandoc_args: -V toc-title="Sumario"
+    number_sections: true
+header-includes:
+  - \renewcommand{\contentsname}{Sumario}
+toc: true
 # Next code for knitting more than one type of document automatically comes from https://stackoverflow.com/questions/39662365/knit-one-markdown-file-to-two-output-files/53280491#53280491
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding,
@@ -15,11 +17,13 @@ knit: (function(inputFile, encoding) {
 # And:
 # https://stackoverflow.com/a/46007686/10647267
 
+bibliography: scholar.bib
 ---
 
 ```{r setup, include=FALSE}
 # knitr options
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE)
 
 # This is a try:
 knitr::opts_knit$set(stop_on_error = 2L)
@@ -29,20 +33,609 @@ knitr::opts_knit$set(stop_on_error = 2L)
 # complete script.
 ```
 
+```{r libraries, include=FALSE}
+# Load packages
+library(knitr)
+library(ggplot2)
+library(ggseqlogo)
+library(neuralnet)
+library(RSNNS)
+library(caret)
+library(kernlab)
+```
+
+```{r create directory structure}
+directories <- c("data", "results", "intermediateData")
+
+# Create directories
+for (i in directories){
+  if (!(dir.exists(i))){
+dir.create(i)
+}
+}
+```
+
 ```{r delete results files, eval= FALSE}
 # Run this chunk ONLY if you want to re-do
 # all the report FROM ZERO.
 # Remember that the .RData files are there to
 # avoid unnecesarily redoing long data processing.
 
-file.remove(c(""))
-
-
-```
-
-```{r libraries, include=FALSE}
-# Load packages
-library(knitr)
+file.remove(c("intermediateData/model.RData",
+              "intermediateData/model2.RData",
+              "intermediateData/encoded_sequences.RData",
+              "results/interaccion_peptido_MHCI.pdf"))
 ```
 \newpage
 
+# Algoritmo Red Neuronal Artificial
+
+Los algoritmos de Red Neuronal Artificial (o _ANN_ por el inglés _'Artificial Neuronal Net'_), son simulaciones que imitan el funcionamiento de las redes neuronales biológicas. Por lo general no modelan redes neuronales concretas, sino modelos abstractos.
+
+Como abstracción de una red neural biológica, se podría decir que las ANNs constan de dos tipos de "piezas": **nodos** y **vértices**.
+
+- Los **nodos** de las ANNs son objetos de código que - igual que hacen las neuronas biológicas - aceptan datos, los procesan, y envían datos a su vez.
+
+- Los **vértices** son el equivalente a los axones y dendritas. Definen qué neuronas están conectadas entre ellas y, por tanto, cómo viaja la información dentro de la red neuronal.
+
+Cada ANN se puede describir por las siguientes características:  
+- La **función de activación**.  
+- La **topología**.  
+- El **algoritmo de entrenamiento**.
+
+La **función de activación** describe la forma en que los nodos combinan los datos que les llegan para generar los datos que envían. Diferentes funciones de activación son más adecuadas para diferentes tareas de aprendizaje. Las funciones más comunes son la _función de paso único_, la _lineal_, la _lineal saturada_, la _tangente hiperbólica_ y la _gaussiana_.
+
+La **topología** de la red describe el número de nodos por capa, el número de capas, y cómo se conectan unas con otras (número de nodos y si la información puede viajar "hacia atrás", de capas posteriores a capas anteriores).
+
+El **algoritmo de entrenamiento** configura la forma en que se ponderan los datos que se transmiten por cada vértice, una forma de modular las señales que viajan por la red _adicional a la función de activación_.
+
+## Fortalezas y debilidades de las Redes Neuronales Artificiales
+
+|Fortalezas|Debilidades|
+|----------------------------------------|----------------------------------------|
+| - Se pueden usar tanto para problemas de clasificación como para predicción numérica. | - Necesitan enormes cantidades de recursos de cálculo y su entrenamiento es lento, especialmente cuando la topología de la red es compleja|
+|||
+| - Pueden modelar patrones más complejos que casi cualquier otro algoritmo. | - Muy susceptibles a sobreajustar los datos de entrenamiento. |
+|||
+| - Hace pocas asunciones previas acerca de las relaciones entre los datos. | - El modelo resultante del entrenamiento es de tipo caja negra, complejo y difícil (si no imposible) de interpretar. |
+
+# Algoritmo Support Vector Machine
+
+Los algoritmos SVM (_Support Vector Machine_) procesan datos distribuidos en un espacio multidimensional, y los utilizan para definir una superficie (hiperplano) que divide dicho espacio en regiones homogéneas que agrupan observaciones afines. Estos algoritmos se usan en el campo del aprendizaje automático tanto para clasificar observaciones, como para hacer predicciones. Este pequeño script pondrá en aplicación una de sus funciones más sencillas, la clasificación de un conjunto de observaciones en dos grupos diferenciados.
+
+Cuando las observaciones de ambos grupos están claramente separadas y pueden separarse completamente mediante una línea, plano, o su equivalente multidimensional (hiperplano), hablamos de **datos separables linealmente**. Sin embargo, en la vida real es muy común que la relación entre variables no sea lineal. Es estos casos, se pueden seguir dos estrategias: aplicación de la _slack variable_ (variable fluctuante) y el uso del _kernel trick_ (cambio de la función kernel).
+
+El caso de la variable _slack_ consiste en añadir una variable el algoritmo que "permite" dejar observaciones de entrenamiento fuera del grupo al que propiamente pertenecen. Aquí lo que produce el algoritmo es una optimización del hiperplano para miniminar la distancia de esas observaciones hasta el límite que define su clasificación correcta.
+
+El _kernel trick_ es matemáticamente más complejo y consiste en añadir nuevas dimensiones a los datos y usarlas para identificar las relaciones no lineales entre las variables. Aquí las superficies que definen los límites entre grupos ya no son hiperplanos, sino curvas de mayor o menor complejidad.
+
+## Fortalezas y debilidades del algoritmo SVM
+
+|Fortalezas|Debilidades|
+|----------------------------------------|----------------------------------------|
+| - Se puede usar tanto para problemas de clasificación como para predicción numérica. | - Encontrar el modelo más adecuado requiere probar varias combinaciones de kernels y parámetros. |
+|||
+| - Poco sensible al ruido en los datos y poco propenso al sobreajuste (overfitting). | - El entrenamiento puede ser lento, en especial se el set de datos tiene un gran número de características o ejemplos. |
+|||
+| - Puede ser de más fácil uso que las redes neurales, especialmente debido a la existencia de varios algoritmos SVM que han sido adaptados para su uso en ciencia de datos. | - El modelo resultante del entrenamiento es de tipo caja negra, complejo y difícil (si no imposible) de interpretar. |
+|||
+| - Popular debido a su alta precisión y a la fama debida a su uso ganador en competiciones de minería de datos. | |
+
+# Análisis exploratorio
+
+```{r check the existence of data file}
+# The file with the dataset must be in a directory called "data"
+# placed in the same directory of the code we are going to run
+
+if (! dir.exists("./data")) {
+  stop("El directorio ./data no existe.
+       El dataset debe estar en el directorio ./data para generar el reporte.")
+}
+
+# Check how many files (if any) are in data directory with format csv
+csv_files <- list.files(path = "./data", pattern = "csv")
+
+if (length(csv_files) < 1){
+  stop("No se ha encontrado en el directorio './data'
+       ningún archivo con extensión csv.
+       Para el uso de este informe automático es necesario
+       que el dataset esté en forma de fichero csv (y con extensión '.csv')
+       en el directorio '.data/'")
+}else if (length(csv_files) > 1){
+  stop("Demasiados archivos con extensión '.csv' en el directorio './data'.
+       Para el uso de este informe automático es necesario 
+       que el dataset esté en forma de un único fichero csv 
+       (y con extensión '.csv') en el directorio '.data/'")
+}
+
+```
+
+El set de datos para este informe proviene del fichero "`r csv_files`".
+
+```{r structure of the data}
+# Read dataset into a data frame and check its structure
+raw_dataframe <- read.csv2(
+  file.path("data", csv_files),
+  stringsAsFactors = FALSE)
+
+raw_dataframe$label <- as.factor(raw_dataframe$label)
+
+observaciones <- nrow(raw_dataframe)
+variables <- ncol(raw_dataframe)
+
+```
+
+El dataset está compuesto por:  
+**`r observaciones` observaciones**, de cada una de las cuales se han obtenido  
+**`r variables` variables**.
+
+```{r variables}
+str(raw_dataframe)
+```
+
+La primera variable, 'sequence', corresponde a la secuencia de aminoácidos en cada péptido en la que cada aminoácido está codificado por una letra siguiendo las [recomendaciones de la IUPAC](https://www.ncbi.nlm.nih.gov/Class/MLACourse/Modules/MolBioReview/iupac_aa_abbreviations.html)[@iupac1984iupac].
+
+La segunda variable, 'label', nos informa de la interacción del péptido con el MHCI; donde 'NB' significa que no hay interacción, y 'SB' significa que sí hay interacción.
+
+Un dato que nos interesaría conocer es el patrón que sigue la secuencia de péptidos en cada categoría ('NB' y 'SB'), representarlo como [secuencia logo](https://es.wikipedia.org/wiki/Logo_de_secuencias), y ver si hay alguna diferencia apreciable a simple vista.
+\newpage
+```{r modificando las cadenas de la secuencia}
+# Compruebo si hay secuencias duplicadas
+secuencias_unicas <- length(unique(raw_dataframe$sequence))
+# Compruebo si todas las secuencias tienen la misma longitud
+secuencias_longitud <- table(nchar(raw_dataframe$sequence))
+```
+Antes de nada, comprobamos si tenemos secuencias repetidas en nuestros datos:  
+- Número de observaciones: **`r format(observaciones, big.mark = " ")`**.  
+- Número de secuencias únicas: **`r format(secuencias_unicas, big.mark = " ")`**.
+
+Y la longitud de secuencia de todos los péptidos:
+```{r tabla de longitudes de peptidos}
+kable(secuencias_longitud,
+      col.names = c("Longitud", "Péptidos"),
+      align = 'cc',
+      format.args = list(big.mark = " "))
+```
+```{r generate data sets for seqlogos}
+# Segregate sequences by label
+NB_sequences <- raw_dataframe[raw_dataframe$label == 'NB', ]
+SB_sequences <- raw_dataframe[raw_dataframe$label == 'SB', ]
+```
+
+- Sequencias sin interacción con el MHCI: **`r format(nrow(NB_sequences), big.mark=" ")`**  
+- Sequencias que interaccionan con el MHCI: **`r format(nrow(SB_sequences), big.mark=" ")`** 
+
+Una vez aclarada la estructura de las secuencias pasamos a generar los logos de secuencia; en este caso usando el paquete `ggseqlogo`[@10.1093/bioinformatics/btx469].
+
+```{r generate seqlogos prob, fig.width=5.5, fig.height=3, fig.cap='Logo de secuencia de péptidos sin interacción con MHCI (superior) y con interacción (inferior). En el eje vertical se representan las proporciones de cada aminoácido en cada posición.'}
+
+# Make a named list with both groups of sequences
+sequence_list <- list(NB_sequences$sequence, SB_sequences$sequence)
+names(sequence_list) <- c("Péptidos sin interacción",
+                          "Péptidos con interacción")
+# Draw the seqlogos
+ggseqlogo(sequence_list, method='prob', ncol=2)
+```
+
+Al comparar los logos de secuencia de los péptidos que no muestran interacción con el MHCI (superior), y los que sí interactúan (inferior); llama la atención la prevalencia de aminoácidos hidrofóbicos en las posiciones 2 y 9 de los péptidos con interacción.
+\newpage
+La diferencia se ve mucho mejor si en el eje vertical representamos los bits de información aportados en lugar de la probabilidad:
+
+```{r generate seqlogos bit, fig.width=5.5, fig.height=3, fig.cap='Logo de secuencia de péptidos sin interacción con MHCI (superior) y con interacción (inferior). En el eje vertical se representan los bits de información de cada aminoácido en cada posición.'}
+
+# Draw the seqlogos
+ggseqlogo(sequence_list, method='bit', ncol=2)
+```
+
+En el caso de los péptidos sin interacción con MHCI, la información aportada por cada aminoácido es tan baja que apenas aparecen representados cuando se usa la misma escala que para los péptidos que sí interaccionan.
+
+# Pre-procesado de datos
+
+## One-shot encoding
+
+Como paso previo al análisis mediante aprendizaje automático, los péptidos han sido recodificados mediante la transformación conocida como [*one hot encoding*](https://hackernoon.com/what-is-one-hot-encoding-why-and-when-do-you-have-to-use-it-e3c6186d008f), según la cual cada aminoácido en la secuencia del péptido es representado en código binario.
+
+```{r one-hot enconding}
+oneHotEncoding <- function(x) {
+  aminoacidos <- c("A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K",
+                   "M", "F", "P", "S", "T", "W", "Y", "V")
+  # Coding function
+  coder <- function(x){
+    # Make dataframe of zeroes
+    coded <- data.frame(matrix(0, ncol = 20, nrow = 9))
+    # One column for each of proteingenic aminoacids
+    colnames(coded) <- aminoacidos
+    # Row with the peptide sequence
+    coded$peptido <- unlist(strsplit(x[1], ""))
+    
+    # Replace zeros with ones when there is aminoacid coincidence
+    for (row in 1:(length(coded)-1)){
+      coded[, row] <- replace(coded[ ,row], coded$peptido == colnames(coded[row]), 1)
+      }
+    # Take out peptido row
+    coded$peptido <- NULL
+    # Transform the data frame into a vector
+    return(coded <- as.vector(t(coded)))
+  }
+  temporal_encoded <- apply(x, 1, coder)
+  return(as.data.frame(t(temporal_encoded)))
+}
+```
+
+```{r encode all aminoacid sequences}
+# Check firstly if an already encoded object exists,
+# since it takes a lot of time to encode
+if(file.exists("intermediateData/encoded_sequences.RData")){
+  load("intermediateData/encoded_sequences.RData")
+}else{
+  encoded_sequences <- oneHotEncoding(raw_dataframe)
+  save(encoded_sequences, file="intermediateData/encoded_sequences.RData")
+}
+```
+
+```{r add labels}
+encoded_sequences$label <- raw_dataframe$label
+```
+
+Hecho esto, vemos que los datos con los que alimentaremos los algoritmos de aprendizaje automático se componen de **`r format(nrow(encoded_sequences), big.mark=" ")`** secuencias y **`r format(ncol(encoded_sequences), big.mark=" ")`** variables cada secuencia.
+
+La siguiente secuencia es un ejemplo de péptido (`r raw_dataframe[1,1]`) codificado mediante one-hot encoding:
+```{r print example of coded peptide}
+as.vector(t(encoded_sequences[1, 1:180]))
+```
+
+
+## Sets de entrenamiento y prueba
+
+```{r separa sets entrenamiento y prueba}
+# Observations by subset
+train <- round((2*observaciones)/3)
+test <- observaciones-train
+
+set.seed(123)
+# Reordered row numbers
+shuffled_rows <- sample(observaciones)
+training_rows <- shuffled_rows[1:train]
+test_rows <- shuffled_rows[(train + 1):observaciones]
+# Subset the dataframe
+training_dataframe <- encoded_sequences[training_rows, ]
+test_dataframe <- encoded_sequences[test_rows, ]
+```
+
+Como último paso antes del análisis, hemos dividido el set de datos - al azar - en un subset de entrenamiento (2/3 de las observaciones), y un subset de evaluación (1/3 de las observaciones).
+
+**Entrenamiento:** `r format(train, big.mark= " ")` observaciones.  
+**Evaluación:** `r format(test, big.mark=" ")` observaciones.
+
+# Análisis de los datos con Red Neuronal Artificial
+
+## Primer modelo (una capa oculta con un nodo)
+```{r train the one node model}
+set.seed(1234567)
+
+if(file.exists("intermediateData/model.RData")){
+  load("intermediateData/model.RData")
+}else{
+model <- neuralnet(label ~ ., 
+                   data =  training_dataframe,
+                   hidden = 1,
+                   linear.output = FALSE)
+save(model, file = "./intermediateData/model.RData")
+}
+```
+
+El primer modelo consta de:  
+`r length(model$model.list$variables)` nodos de input  
+1 capa oculta compuesta por 1 nodo  
+`r length(model$model.list$response)` nodos output
+
+Error: `r model$result.matrix[1]`  
+Pasos de entrenamiento: `r model$result.matrix[3]`
+
+```{r evaluate model one performance}
+model_results <- predict(model, test_dataframe)
+model_results <- max.col(model_results)
+model_results <- factor(model_results, labels = c("NB", "SB"))
+#mean(test_dataframe$label == model_results)
+
+# confusion matrix for linear from caret package
+# Set SB as the positive
+one_node_matrix <- caret::confusionMatrix(model_results,
+                test_dataframe$label,
+                positive = "SB")
+```
+
+## Segundo modelo (una capa oculta con tres nodos)
+```{r train the three node model}
+set.seed(1234567)
+
+if(file.exists("intermediateData/model2.RData")){
+  load("intermediateData/model2.RData")
+}else{
+model2 <- neuralnet(label ~ ., 
+                   data =  training_dataframe,
+                   linear.output = FALSE,
+                   hidden = 3)
+save(model2, file = "./intermediateData/model2.RData")
+}
+```
+
+
+El segundo modelo consta de:  
+`r length(model2$model.list$variables)` nodos de input  
+1 capa escondida compuesta por 3 nodos  
+`r length(model2$model.list$response)` nodos output
+
+Error: `r model2$result.matrix[1]`  
+Pasos de entrenamiento: `r model2$result.matrix[3]`
+
+## Evaluación de los modelos
+Para evaluar los modelos utilizamos el set de datos de prueba que habíamos especificado con anterioridad.
+
+```{r evaluate model three performance}
+model_results2 <- predict(model2, test_dataframe)
+model_results2 <- max.col(model_results2)
+model_results2 <- factor(model_results2, labels = c("NB", "SB"))
+#mean(test_dataframe$label == model_results2)
+
+# confusion matrix for linear from caret package
+# Set SB as the positive
+three_node_matrix <- caret::confusionMatrix(model_results2,
+                test_dataframe$label,
+                positive = "SB")
+```
+
+A la hora de evaluar modelos predictivos hay tres parámetros sencillos de calcular y explicar, y son los que se han usado en este informe:
+
+- **Sensibilidad**: Es la proporción de observaciones positivas que han sido clasificadas correctamente.
+$$
+\text{sensibilidad} = \frac{\text{positivos auténticos}}{\text{positivos auténticos } + \text{ falsos negativos}}
+$$
+
+- **Especificidad**: Es la proporción de observaciones negativas que han sido clasificadas correctamente.
+$$
+\text{especificidad} = \frac{\text{negativos auténticos}}{\text{negativos auténticos } + \text{ falsos positivos}}
+$$
+- **Precisión**: Es la proporción de ejemplos clasificados como positivos que son _realmente_ positivos.
+
+$$
+\text{precisión} = \frac{\text{positivos auténticos}}{\text{positivos auténticos } + \text{ falsos positivos}}
+$$
+
+El objetivo del modelo de clasificación que hemos construido es distinguir entre péptidos que interactúan con el MHCI (positivo) y péptidos que no interactúan con el MHCI (negativo).
+
+En la siguiente tabla podemos comparar los tres parámetros de evaluación para ambos modelos (con 1 nodo o con 3 nodos en la capa oculta):
+
+```{r create dataframe with evaluation values, results='asis'}
+# Recupera los parametros de interes
+one_node_evaluation <- one_node_matrix$byClass[c(1, 2, 5)]
+three_node_evaluation <- three_node_matrix$byClass[c(1, 2, 5)]
+# Create data frame
+evaluation_table <- as.data.frame(rbind(one_node_evaluation,
+                          three_node_evaluation))
+# Change column and row names
+colnames(evaluation_table) <- c("Sensibilidad", "Especificidad", "Precisión")
+rownames(evaluation_table) <- c("Un nodo oculto", "Tres nodos ocultos")
+```
+
+```{r print table, results="asis"}
+# Print table
+knitr::kable(evaluation_table, format="markdown",
+             digits = 4,
+             align = 'ccc')
+```
+
+Ambas redes obtienen muy buenos resultados, sin embargo **la red con un único nodo en la capa oculta es ligeramente mejor en cuanto a sensibilidad**; mientras que el modelo construido con la red de **tres nodos ocultos** es ligeramente mejor en los valores de evaluación de **especificidad** y **precisión**.
+
+## Modelo de una capa oculta con tres nodos entrenado por validación cruzada de 5 particiones
+```{r create cross-validation method}
+fitControl <- trainControl(
+  summaryFunction = multiClassSummary,
+  classProbs = TRUE,
+  method = 'cv',
+  number = 5)
+```
+
+```{r train ANN model}
+set.seed(1234567)
+library(MLmetrics)
+if(file.exists("intermediateData/model.ann.caret.RData")){
+  load("intermediateData/model.ann.caret.RData")
+}else{
+model.ann.caret <- caret::train(label ~ .,
+             data=encoded_sequences,
+             trControl = fitControl,
+             metric= 'Sensitivity',
+             method='mlp',
+             # Fix size of hidden layer to 3
+             tuneGrid = data.frame(size = 3)
+             )
+save(model.ann.caret, file = "./intermediateData/model.ann.caret.RData")
+}
+```
+
+```{r create dataframe with evaluation values for three models, results='asis'}
+# Recupera los parametros de interes
+five_fold_evaluation <- model.ann.caret$results[c(8, 9, 5)]
+# Create data frame
+evaluation_table2 <- as.data.frame(rbind(one_node_evaluation,
+                          three_node_evaluation,
+                          five_fold_evaluation))
+# Change column and row names
+colnames(evaluation_table2) <- c("Sensibilidad", "Especificidad", "Precisión")
+rownames(evaluation_table2) <- c("Un nodo oculto", "Tres nodos ocultos",
+                                 "Validación cruzada")
+```
+
+El método de _validación cruzada por particiones_ que se usa para evitar entrenar o testear los modelos con datos no representativos, y ofrece unos resultados de evaluación del modelo más fiables respecto a cómo se comportará al enfrentarse a datos nuevos. 
+
+```{r print table with 5 fold crossvalidation, results="asis"}
+# Print table
+knitr::kable(evaluation_table2, format="markdown",
+             digits = 4,
+             align = 'ccc')
+```
+
+Si comparamos los datos de **sensibilidad, especificidad y precisión**, con los calculados anteriorment para el modelo de tres nodos ocultos, **los nuevos valores son inferiores** en los tres casos. Aunque es el mismo modelo; al estar calculados usando diferentes combinaciones del mismo dataset representan mejor las capacidades del modelo.
+
+# Análisis de datos con Support Vector Machine
+
+## Entrenamiento y evaluación de modelos
+```{r train a simple linear SVM classifier, results='hide'}
+# vanilladot sets the kernel function to linear kernel
+set.seed(1234567)
+svm_lineal <- ksvm(label ~ ., data = training_dataframe,
+                          kernel = "vanilladot")
+```
+
+```{r Gaussian RBF kernel}
+# RBF kernel uses randomness, set seed if you want to obtain always the same results
+set.seed(1234567)
+if(file.exists("intermediateData/svm_gaussian.RData")){
+  load("intermediateData/svm_gaussian.RData")
+}else{
+  svm_gaussian <- ksvm(label ~ ., data = training_dataframe,
+                          kernel = "rbfdot")
+  save(svm_gaussian, file="intermediateData/svm_gaussian.RData")
+}
+```
+
+Para este informe hemos construido y entrenado dos modelos SVM de diferente complejidad para comparar sus resultados.
+
+Uno es un **SVM lineal**, más sencillo, y el otro es un **SVM gaussiano**; este último es más complejo y requiere más recursos de cálculo, pero permite que el modelo aprenda relaciones más complejas entre las variables del set de datos.
+
+Los sets de entrenamiento y evaluación usados para ambos modelos son idénticos, para poder hacer la comparación, e iguales también a los usados en los modelos de Red Neuronal Artificial.
+
+```{r make predictions on testing dataset, results='hide'}
+svm_linear_predictions <- predict(svm_lineal, test_dataframe)
+
+svm_gaussian_predictions <- predict(svm_gaussian, test_dataframe)
+#head(svm_linear_predictions)
+```
+
+```{r confusion matrix for linear from caret package, message=FALSE}
+# We set interaction as the positive
+linear_matrix <- caret::confusionMatrix(svm_linear_predictions,
+                test_dataframe$label,
+                positive = "SB")
+```
+
+```{r confusion matrix for gaussian from caret package}
+# We set interaction as the positive
+gaussian_matrix <- caret::confusionMatrix(svm_gaussian_predictions,
+                test_dataframe$label,
+                positive = "SB")
+```
+
+A la hora de evaluar modelos predictivos usamos los mismos tres parámetros usados anteriormente con los modelos de Red Neuronal Artificial: _sensibilidad_, _especificidad_ y _precisión_. Podemos ver la comparativa en la siguiente tabla:
+
+```{r create dataframe with svm evaluation values, results='asis'}
+# Recupera los parametros de interes
+linear_evaluation <- linear_matrix$byClass[c(1, 2, 5)]
+gaussian_evaluation <- gaussian_matrix$byClass[c(1, 2, 5)]
+# Create data frame
+svm_evaluation_table <- as.data.frame(rbind(linear_evaluation,
+                          gaussian_evaluation))
+# Change column and row names
+colnames(svm_evaluation_table) <- c("Sensibilidad", "Especificidad", "Precisión")
+rownames(svm_evaluation_table) <- c("Modelo lineal", "Modelo Gaussiano")
+```
+
+```{r print svm evaluation table, results="asis"}
+# Print table
+knitr::kable(svm_evaluation_table, format="markdown",
+             digits = 3,
+             align = 'ccc')
+```
+
+Vemos en la comparativa que **el modelo gaussiano es ligeramente más sensible** que el lineal (menos falsos negativos), pero a cambio de **menor especificidad y precisión** (más falsos positivos).
+
+La elección entre uno y otro modelo en este caso podría depender si no queremos pasar por alto ninguno de los péptidos que presentan interacción (elegiríamos el modelo gaussiano, con mayor sensibilidad); o de si no queremos asumir la pérdida de tiempo y dinero que supondría testar falsos positivos (eligiríamos el modelo lineal, con mayor especificidad y precisión).
+\newpage
+
+## Modelo gaussiano entrenado por validación cruzada de 5 particiones
+```{r create cross-validation method for svm}
+svm_fitControl <- trainControl(
+  summaryFunction = multiClassSummary,
+  classProbs = TRUE,
+  method = 'cv',
+  number = 5)
+```
+
+```{r train svm RBF model}
+set.seed(1234567)
+if(file.exists("intermediateData/svm_caret.RData")){
+  load("intermediateData/svm_caret.RData")
+}else{
+svm_caret <- caret::train(label ~ .,
+             data=encoded_sequences,
+             metric= 'Sensitivity',
+             trControl = svm_fitControl,
+             method='svmRadial',
+             # Fix C to 1, because it is so in the previous models
+             # The value of sigma comes from the previous radial model
+             tuneGrid = expand.grid(C = c(1), 
+                                    sigma = c(0.00291971510799512))
+             )
+save(svm_caret, file = "./intermediateData/svm_caret.RData")
+}
+```
+
+
+```{r create dataframe with evaluation values for three SVM models, results='asis'}
+# Recupera los parametros de interes
+five_fold_svm_evaluation <- svm_caret$results[c(9, 10, 6)]
+# Create data frame
+svm_evaluation_table2 <- as.data.frame(rbind(linear_evaluation,
+                          gaussian_evaluation,
+                          five_fold_svm_evaluation))
+# Change column and row names
+colnames(svm_evaluation_table2) <- c("Sensibilidad", "Especificidad", "Precisión")
+rownames(svm_evaluation_table2) <- c("Modelo Lineal", "Modelo Gaussiano",
+                                 "Gaussiano por validación cruzada")
+```
+
+```{r print svm evaluation table 2, results="asis"}
+# Print table
+knitr::kable(svm_evaluation_table2, format="markdown",
+             digits = 3,
+             align = 'ccc')
+```
+
+**El modelo gaussiano por validación cruzada** es ligeramente menos sensible que el que no está entrenado por validación cruzada, pero su especificidad y precisión son mayores.Y en todos los valores presenta mejor desempeño que el modelo lineal.
+
+Además los datos de desempeño en modelos entrenados por validación cruzada son más robustos en cuanto a cómo se comportará el modelo frente a datos desconocidos. Por todas estas razónes, **el modelo más adecuado de SVM sería el gaussiano entrenado por validación cruzada**.
+
+
+
+# Comentario final
+
+Finalmente comparamos el desempeño de todos los modelos, tanto los producidos mediante Redes Neurales Artificiales como los producidos mediante Support Vector Machines, para elegir el que mejor se adapte a nuestras necesidades:
+
+```{r create dataframe with evaluation values for all models, results='asis'}
+# Create data frame
+all_evaluation_table <- rbind(evaluation_table2,
+                              svm_evaluation_table2)
+
+# Print table
+knitr::kable(all_evaluation_table, format="markdown",
+             digits = 4,
+             align = 'ccc')
+```
+
+Vemos que no hemos conseguido una solución perfecta, y además no hay grandes diferencias en los valores de desempeño. La elección del modelo a elegir depederá de si preferimos **sensibilidad**, para lo cual elegiríamos el **modelo SVM gaussiano**; o si necesitamos que **especificidad y precisión** sean lo más altas posible, por lo que nos decantaríamos por el **modelo SVM gaussiano entrenado por validación cruzada**.
+
+Aunque también debemos tener en cuenta que los datos de desempeño de este último modelo, el **SVM gaussiano entrenado por validación cruzada**, se han obtenido al entrenarlo con una mayor variedad de datos que otros modelos SVM, por lo que es un desempeño más representativo de cómo se comportará el modelo al enfrentarlo a datos nuevos; así que podría ser la mejor elección en cualquier caso.
+\newpage
+
+# Apéndice A: Código
+
+El documento original en formato .Rmd, que incluye el código completo en lenguaje R usado para generar este informe, se puede consultar y descargar en el siguiente repositorio de Github:
+[jorgevallejo/interaccion_peptido_MHCI](https://github.com/jorgevallejo/interaccion_peptido_MHCI)
+
+# Apéndice B: Reproducibilidad
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+sessionInfo() # For better reproducibility
+```
+
+# Referencias
