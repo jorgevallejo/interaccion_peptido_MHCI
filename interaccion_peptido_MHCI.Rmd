@@ -45,7 +45,8 @@ library(kernlab)
 ```
 
 ```{r create directory structure}
-directories <- c("data", "results", "intermediateData")
+# directories <- c("data", "results", "intermediateData")
+directories <- c("results", "intermediateData")
 
 # Create directories
 for (i in directories){
@@ -64,6 +65,9 @@ dir.create(i)
 file.remove(c("intermediateData/model.RData",
               "intermediateData/model2.RData",
               "intermediateData/encoded_sequences.RData",
+              "intermediateData/model.ann.caret.RData",
+              "intermediateData/svm_caret.RData",
+              "intermediateData/svm_gaussian.RData",
               "results/interaccion_peptido_MHCI.pdf"))
 ```
 \newpage
@@ -123,7 +127,10 @@ El _kernel trick_ es matemáticamente más complejo y consiste en añadir nuevas
 
 # Análisis exploratorio
 
-```{r check the existence of data file}
+```{r check the existence of data file in data folder, eval=FALSE}
+
+# Eval FALSE because it has been asked not to associate data file with a fixed path
+
 # The file with the dataset must be in a directory called "data"
 # placed in the same directory of the code we are going to run
 
@@ -150,13 +157,42 @@ if (length(csv_files) < 1){
 
 ```
 
+```{r check the existence of data file in working folder}
+
+# Because it has been asked not to associate data file with a fixed path
+
+# The file with the dataset must be in 
+# the same directory than the code we are going to run
+
+# Check how many files (if any) are in working directory with format csv
+csv_files <- list.files(path = "./", pattern = "csv")
+
+if (length(csv_files) < 1){
+  stop("No se ha encontrado en el directorio
+       ningún archivo con extensión csv.
+       Para el uso de este informe es necesario
+       que el dataset esté en forma de fichero csv (y con extensión '.csv')
+       en el directorio de trabajo.")
+}else if (length(csv_files) > 1){
+  stop("Demasiados archivos con extensión '.csv' en el directorio.
+       Para el uso de este informe es necesario 
+       que el dataset esté en forma de un único fichero csv 
+       (y con extensión '.csv') en el directorio de trabajo.")
+}
+
+```
+
 El set de datos para este informe proviene del fichero "`r csv_files`".
 
 ```{r structure of the data}
 # Read dataset into a data frame and check its structure
-raw_dataframe <- read.csv2(
-  file.path("data", csv_files),
-  stringsAsFactors = FALSE)
+# raw_dataframe <- read.csv2(
+#   file.path("data", csv_files),
+#   stringsAsFactors = FALSE)
+
+# Read dataset from working directory
+raw_dataframe <- read.csv2(csv_files,
+                           stringsAsFactors = FALSE)
 
 raw_dataframe$label <- as.factor(raw_dataframe$label)
 
@@ -608,7 +644,7 @@ Además los datos de desempeño en modelos entrenados por validación cruzada so
 
 
 
-# Comentario final
+# Discusión final
 
 Finalmente comparamos el desempeño de todos los modelos, tanto los producidos mediante Redes Neurales Artificiales como los producidos mediante Support Vector Machines, para elegir el que mejor se adapte a nuestras necesidades:
 
