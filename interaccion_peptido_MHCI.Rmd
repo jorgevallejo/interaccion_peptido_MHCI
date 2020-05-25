@@ -608,7 +608,7 @@ Además los datos de desempeño en modelos entrenados por validación cruzada so
 
 
 
-# Comentario final
+# Discusión final
 
 Finalmente comparamos el desempeño de todos los modelos, tanto los producidos mediante Redes Neurales Artificiales como los producidos mediante Support Vector Machines, para elegir el que mejor se adapte a nuestras necesidades:
 
