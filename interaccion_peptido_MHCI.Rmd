@@ -65,6 +65,9 @@ dir.create(i)
 file.remove(c("intermediateData/model.RData",
               "intermediateData/model2.RData",
               "intermediateData/encoded_sequences.RData",
+              "intermediateData/model.ann.caret.RData",
+              "intermediateData/svm_caret.RData",
+              "intermediateData/svm_gaussian.RData",
               "results/interaccion_peptido_MHCI.pdf"))
 ```
 \newpage
