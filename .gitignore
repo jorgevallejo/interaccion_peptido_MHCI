@@ -4,6 +4,6 @@
 .Ruserdata
 
 ##directories##
-results/
+# results/
 # data/
 intermediateData/
